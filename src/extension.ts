@@ -9,9 +9,9 @@ import { expensiveOperationsInLoopsRule } from './patterns/expensive-operations-
 import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
 import { domQueriesInLoopsRule } from './patterns/dom-queries-in-loops';
 import { memoryLeaksRule } from './patterns/memory-leaks';
-import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
-import { inefficientObjectAccessRule } from './patterns/inefficient-object-access';
-import { infiniteRecursionRisksRule } from './patterns/infinite-recursion-risks';
+// import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
+// import { inefficientObjectAccessRule } from './patterns/inefficient-object-access';
+// import { infiniteRecursionRisksRule } from './patterns/infinite-recursion-risks';
 import { scoreCalculator } from './scoring/calculator';
 import {
   AnalysisResult,
@@ -121,9 +121,9 @@ export class CodeQualityExtension {
     patternEngine.registerRule(stringConcatenationInLoopsRule);
     patternEngine.registerRule(domQueriesInLoopsRule);
     patternEngine.registerRule(memoryLeaksRule);
-    patternEngine.registerRule(multipleArrayIterationsRule);
-    patternEngine.registerRule(inefficientObjectAccessRule);
-    patternEngine.registerRule(infiniteRecursionRisksRule);
+    // patternEngine.registerRule(multipleArrayIterationsRule);
+    // patternEngine.registerRule(inefficientObjectAccessRule);
+    // patternEngine.registerRule(infiniteRecursionRisksRule);
 
     // TODO: Register remaining 40 patterns
     // Next: Code quality patterns (functions too long, high complexity, etc.)

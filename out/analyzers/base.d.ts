@@ -60,21 +60,8 @@ export declare abstract class BaseAnalyzer implements IAnalyzer {
     protected createAnalysisError(error: unknown): AnalysisError;
     /**
      * Get score calculator instance
-     * Note: This should be injected in a real implementation
      */
-    protected getScoreCalculator(): {
-        calculateScore: (matches: PatternMatch[]) => {
-            value: number;
-            label: string;
-            breakdown: {
-                performance: number;
-                security: number;
-                maintainability: number;
-                style: number;
-                total: number;
-            };
-        };
-    };
+    protected getScoreCalculator(): any;
     /**
      * Helper method to create range from AST node
      */

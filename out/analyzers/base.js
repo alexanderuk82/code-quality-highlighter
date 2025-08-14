@@ -114,24 +114,11 @@ class BaseAnalyzer {
     }
     /**
      * Get score calculator instance
-     * Note: This should be injected in a real implementation
      */
     getScoreCalculator() {
-        // This is a placeholder - in the real implementation,
-        // this should be injected via dependency injection
-        return {
-            calculateScore: (matches) => ({
-                value: Math.max(0, 100 - (matches.length * 5)),
-                label: 'Calculated',
-                breakdown: {
-                    performance: 25,
-                    security: 25,
-                    maintainability: 25,
-                    style: 25,
-                    total: 100
-                }
-            })
-        };
+        // Import here to avoid circular dependency
+        const { scoreCalculator } = require('../scoring/calculator');
+        return scoreCalculator;
     }
     /**
      * Helper method to create range from AST node

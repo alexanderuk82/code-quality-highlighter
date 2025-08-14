@@ -47,9 +47,9 @@ const expensive_operations_in_loops_1 = require("./patterns/expensive-operations
 const string_concatenation_in_loops_1 = require("./patterns/string-concatenation-in-loops");
 const dom_queries_in_loops_1 = require("./patterns/dom-queries-in-loops");
 const memory_leaks_1 = require("./patterns/memory-leaks");
-const multiple_array_iterations_1 = require("./patterns/multiple-array-iterations");
-const inefficient_object_access_1 = require("./patterns/inefficient-object-access");
-const infinite_recursion_risks_1 = require("./patterns/infinite-recursion-risks");
+// import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
+// import { inefficientObjectAccessRule } from './patterns/inefficient-object-access';
+// import { infiniteRecursionRisksRule } from './patterns/infinite-recursion-risks';
 const calculator_1 = require("./scoring/calculator");
 const types_1 = require("./types");
 /**
@@ -165,9 +165,9 @@ class CodeQualityExtension {
         engine_1.patternEngine.registerRule(string_concatenation_in_loops_1.stringConcatenationInLoopsRule);
         engine_1.patternEngine.registerRule(dom_queries_in_loops_1.domQueriesInLoopsRule);
         engine_1.patternEngine.registerRule(memory_leaks_1.memoryLeaksRule);
-        engine_1.patternEngine.registerRule(multiple_array_iterations_1.multipleArrayIterationsRule);
-        engine_1.patternEngine.registerRule(inefficient_object_access_1.inefficientObjectAccessRule);
-        engine_1.patternEngine.registerRule(infinite_recursion_risks_1.infiniteRecursionRisksRule);
+        // patternEngine.registerRule(multipleArrayIterationsRule);
+        // patternEngine.registerRule(inefficientObjectAccessRule);
+        // patternEngine.registerRule(infiniteRecursionRisksRule);
         // TODO: Register remaining 40 patterns
         // Next: Code quality patterns (functions too long, high complexity, etc.)
     }
