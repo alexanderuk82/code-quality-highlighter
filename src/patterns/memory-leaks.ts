@@ -1,8 +1,8 @@
-import { 
-  PatternRule, 
-  PatternMatcher, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatcher,
+  ASTNode,
+  MatchContext,
   PatternCategory,
   TooltipTemplate
 } from '../types';
@@ -15,7 +15,7 @@ export class MemoryLeaksMatcher implements PatternMatcher {
     'addEventListener', 'on', 'bind', 'subscribe', 'watch'
   ];
 
-  private readonly _cleanupMethods = [
+  private readonly cleanupMethods = [
     'removeEventListener', 'off', 'unbind', 'unsubscribe', 'unwatch'
   ];
 
@@ -23,7 +23,7 @@ export class MemoryLeaksMatcher implements PatternMatcher {
     'setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback'
   ];
 
-  private readonly _cleanupTimerMethods = [
+  private readonly cleanupTimerMethods = [
     'clearTimeout', 'clearInterval', 'cancelAnimationFrame', 'cancelIdleCallback'
   ];
 
@@ -45,7 +45,7 @@ export class MemoryLeaksMatcher implements PatternMatcher {
 
   public getMatchDetails(node: ASTNode, context: MatchContext) {
     const leakType = this.getLeakType(node, context);
-    
+
     return {
       complexity: 1,
       impact: `${leakType} can cause memory leaks if not properly cleaned up`,
@@ -83,7 +83,7 @@ export class MemoryLeaksMatcher implements PatternMatcher {
   private isDOMReferenceInClosure(node: ASTNode, context: MatchContext): boolean {
     // Check for DOM element references stored in closures
     if (node.type === 'VariableDeclarator') {
-      const init = node.init;
+      const init = (node as any).init;
       if (this.isDOMQuery(init) && this.isInClosure(node, context)) {
         return true;
       }
@@ -95,8 +95,8 @@ export class MemoryLeaksMatcher implements PatternMatcher {
   private isCircularReference(node: ASTNode, _context: MatchContext): boolean {
     // Simple heuristic for circular references
     if (node.type === 'AssignmentExpression') {
-      const left = node.left;
-      const right = node.right;
+      const left = (node as any).left;
+      const right = (node as any).right;
 
       // Check for patterns like obj.parent = parentObj; parentObj.child = obj;
       if (this.isPropertyAssignment(left) && this.isPropertyAssignment(right)) {
@@ -109,17 +109,17 @@ export class MemoryLeaksMatcher implements PatternMatcher {
 
   private getMethodName(node: ASTNode): string | null {
     if (node.type === 'CallExpression') {
-      const callee = node.callee;
-      
+      const callee = (node as any).callee;
+
       if (callee?.type === 'Identifier') {
-        return callee.name;
+        return (callee as any).name;
       }
-      
+
       if (callee?.type === 'MemberExpression') {
-        return callee.property?.name || null;
+        return (callee as any).property?.name || null;
       }
     }
-    
+
     return null;
   }
 
@@ -127,48 +127,52 @@ export class MemoryLeaksMatcher implements PatternMatcher {
     // Check if we're inside a React component, function, or class method
     const sourceCode = context.sourceCode;
     const nodeStart = node.start || 0;
-    
+
     const codeBeforeNode = sourceCode.substring(0, nodeStart);
-    
+
     // Look for function/component patterns
     const patterns = [
       'function', 'const ', 'let ', 'var ',
       'useEffect', 'componentDidMount', 'componentWillUnmount'
     ];
-    
+
     return patterns.some(pattern => codeBeforeNode.includes(pattern));
   }
 
   private hasCorrespondingCleanup(eventMethod: string, context: MatchContext): boolean {
-    const cleanupMap: Record<string, string> = {
-      'addEventListener': 'removeEventListener',
-      'on': 'off',
-      'bind': 'unbind',
-      'subscribe': 'unsubscribe',
-      'watch': 'unwatch'
-    };
+    const cleanupMethodName = this.cleanupMethods.find(method => {
+      const eventToCleanupMap: Record<string, string> = {
+        'addEventListener': 'removeEventListener',
+        'on': 'off',
+        'bind': 'unbind',
+        'subscribe': 'unsubscribe',
+        'watch': 'unwatch'
+      };
+      return method === eventToCleanupMap[eventMethod];
+    });
 
-    const cleanupMethod = cleanupMap[eventMethod];
-    return cleanupMethod ? context.sourceCode.includes(cleanupMethod) : false;
+    return cleanupMethodName ? context.sourceCode.includes(cleanupMethodName) : false;
   }
 
   private isTimerResultStored(node: ASTNode): boolean {
     // Check if timer is assigned to a variable (for later cleanup)
     const parent = this.getParentNode(node);
-    return parent?.type === 'VariableDeclarator' || 
+    return parent?.type === 'VariableDeclarator' ||
            parent?.type === 'AssignmentExpression';
   }
 
   private hasCorrespondingTimerCleanup(timerMethod: string, context: MatchContext): boolean {
-    const cleanupMap: Record<string, string> = {
-      'setTimeout': 'clearTimeout',
-      'setInterval': 'clearInterval',
-      'requestAnimationFrame': 'cancelAnimationFrame',
-      'requestIdleCallback': 'cancelIdleCallback'
-    };
+    const cleanupMethodName = this.cleanupTimerMethods.find(method => {
+      const timerToCleanupMap: Record<string, string> = {
+        'setTimeout': 'clearTimeout',
+        'setInterval': 'clearInterval',
+        'requestAnimationFrame': 'cancelAnimationFrame',
+        'requestIdleCallback': 'cancelIdleCallback'
+      };
+      return method === timerToCleanupMap[timerMethod];
+    });
 
-    const cleanupMethod = cleanupMap[timerMethod];
-    return cleanupMethod ? context.sourceCode.includes(cleanupMethod) : false;
+    return cleanupMethodName ? context.sourceCode.includes(cleanupMethodName) : false;
   }
 
   private isDOMQuery(node: ASTNode | null): boolean {
@@ -187,11 +191,11 @@ export class MemoryLeaksMatcher implements PatternMatcher {
     // Simple check for closure patterns
     const sourceCode = context.sourceCode;
     const nodeStart = node.start || 0;
-    
+
     const codeBeforeNode = sourceCode.substring(0, nodeStart);
-    
+
     // Look for closure indicators
-    return codeBeforeNode.includes('function(') || 
+    return codeBeforeNode.includes('function(') ||
            codeBeforeNode.includes('() =>') ||
            codeBeforeNode.includes('function ');
   }
@@ -213,23 +217,23 @@ export class MemoryLeaksMatcher implements PatternMatcher {
 
   private getLeakType(node: ASTNode, context: MatchContext): string {
     const methodName = this.getMethodName(node);
-    
+
     if (methodName && this.eventMethods.includes(methodName)) {
       return 'Event Listener';
     }
-    
+
     if (methodName && this.timerMethods.includes(methodName)) {
       return 'Timer';
     }
-    
+
     if (this.isDOMReferenceInClosure(node, context)) {
       return 'DOM Reference';
     }
-    
+
     if (this.isCircularReference(node, context)) {
       return 'Circular Reference';
     }
-    
+
     return 'Memory Leak';
   }
 
@@ -240,7 +244,7 @@ export class MemoryLeaksMatcher implements PatternMatcher {
       'DOM Reference': 'Avoid storing DOM references in closures or clear them explicitly',
       'Circular Reference': 'Break circular references by setting properties to null'
     };
-    
+
     return suggestions[leakType] || 'Implement proper cleanup to prevent memory leaks';
   }
 }

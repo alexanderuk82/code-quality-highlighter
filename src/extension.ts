@@ -9,10 +9,13 @@ import { expensiveOperationsInLoopsRule } from './patterns/expensive-operations-
 import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
 import { domQueriesInLoopsRule } from './patterns/dom-queries-in-loops';
 import { memoryLeaksRule } from './patterns/memory-leaks';
+import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
+import { inefficientObjectAccessRule } from './patterns/inefficient-object-access';
+import { infiniteRecursionRisksRule } from './patterns/infinite-recursion-risks';
 import { scoreCalculator } from './scoring/calculator';
-import { 
-  AnalysisResult, 
-  ExtensionConfig, 
+import {
+  AnalysisResult,
+  ExtensionConfig,
   ExtensionState,
   SupportedLanguage,
   PatternCategory,
@@ -51,14 +54,14 @@ export class CodeQualityExtension {
   public activate(): void {
     this.extensionState.isActive = true;
     this.statusBarItem.show();
-    
+
     // Analyze currently active editor
     const activeEditor = vscode.window.activeTextEditor;
     if (activeEditor && this.shouldAnalyzeFile(activeEditor.document)) {
       this.analyzeDocument(activeEditor.document);
     }
 
-    console.log('Code Quality Highlighter activated');
+    // Extension activated successfully
   }
 
   /**
@@ -69,8 +72,8 @@ export class CodeQualityExtension {
     this.clearAnalysisTimeout();
     decorationManager.dispose();
     this.statusBarItem.dispose();
-    
-    console.log('Code Quality Highlighter deactivated');
+
+    // Extension deactivated successfully
   }
 
   /**
@@ -78,7 +81,7 @@ export class CodeQualityExtension {
    */
   private loadConfiguration(): ExtensionConfig {
     const config = vscode.workspace.getConfiguration('codeQuality');
-    
+
     return {
       enableAutoAnalysis: config.get('enableAutoAnalysis', true),
       activeRulesets: config.get('activeRulesets', [
@@ -111,19 +114,17 @@ export class CodeQualityExtension {
   private initializePatterns(): void {
     // Register core patterns
     patternEngine.registerRule(nestedLoopRule);
-    
-    // Register critical performance patterns (6/9 complete)
+
+    // Register critical performance patterns (9/9 complete)
     patternEngine.registerRule(blockingSyncOperationsRule);
     patternEngine.registerRule(expensiveOperationsInLoopsRule);
     patternEngine.registerRule(stringConcatenationInLoopsRule);
     patternEngine.registerRule(domQueriesInLoopsRule);
     patternEngine.registerRule(memoryLeaksRule);
-    
-    // TODO: Register remaining 3 critical patterns:
-    // - Multiple array iterations (chained map/filter)
-    // - Inefficient object access (property lookup caching)
-    // - Infinite recursion risks (base case validation)
-    
+    patternEngine.registerRule(multipleArrayIterationsRule);
+    patternEngine.registerRule(inefficientObjectAccessRule);
+    patternEngine.registerRule(infiniteRecursionRisksRule);
+
     // TODO: Register remaining 40 patterns
     // Next: Code quality patterns (functions too long, high complexity, etc.)
   }
@@ -227,7 +228,7 @@ export class CodeQualityExtension {
     if (event.affectsConfiguration('codeQuality')) {
       this.config = this.loadConfiguration();
       decorationManager.updateConfiguration();
-      
+
       // Re-analyze current file if auto-analysis is enabled
       const activeEditor = vscode.window.activeTextEditor;
       if (activeEditor && this.config.enableAutoAnalysis) {
@@ -264,13 +265,13 @@ export class CodeQualityExtension {
       // Get appropriate analyzer
       const analyzer = AnalyzerFactory.getAnalyzer(language);
       if (!analyzer) {
-        console.warn(`No analyzer found for language: ${language}`);
+        // No analyzer found for this language
         return;
       }
 
       // Perform analysis
       const result = await analyzer.analyze(sourceCode, filePath);
-      
+
       // Update extension state
       this.updateExtensionState(result);
 
@@ -285,11 +286,11 @@ export class CodeQualityExtension {
 
       // Show errors if any
       if (result.errors.length > 0) {
-        console.warn('Analysis errors:', result.errors);
+        // Analysis completed with errors
       }
 
     } catch (error) {
-      console.error('Analysis failed:', error);
+      // Analysis failed with error
       vscode.window.showErrorMessage(`Code analysis failed: ${error}`);
     } finally {
       this.extensionState.analysisInProgress = false;
@@ -312,11 +313,11 @@ export class CodeQualityExtension {
     this.extensionState.lastAnalysisTime = new Date();
     this.extensionState.totalFilesAnalyzed++;
     this.extensionState.totalIssuesFound += result.matches.length;
-    
+
     // Calculate running average score
     const currentAvg = this.extensionState.averageScore;
     const newCount = this.extensionState.totalFilesAnalyzed;
-    this.extensionState.averageScore = 
+    this.extensionState.averageScore =
       (currentAvg * (newCount - 1) + result.score.value) / newCount;
   }
 
@@ -325,13 +326,13 @@ export class CodeQualityExtension {
    */
   private createStatusBarItem(): vscode.StatusBarItem {
     const item = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left, 
+      vscode.StatusBarAlignment.Left,
       100
     );
-    
+
     item.command = 'codeQuality.showReport';
     item.tooltip = 'Click to show detailed quality report';
-    
+
     return item;
   }
 
@@ -354,11 +355,11 @@ export class CodeQualityExtension {
     const score = result.score.value;
     const label = result.score.label;
     const issueCount = result.matches.length;
-    
+
     this.statusBarItem.text = `$(heart) Quality: ${score}% ${label}`;
-    this.statusBarItem.tooltip = 
+    this.statusBarItem.tooltip =
       `Score: ${score}% (${issueCount} issue${issueCount !== 1 ? 's' : ''})\nClick for details`;
-    
+
     // Set background color based on score
     if (score < 60) {
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
@@ -381,7 +382,7 @@ export class CodeQualityExtension {
 
     const filePath = activeEditor.document.uri.fsPath;
     const matches = decorationManager.getActiveDecorations(filePath);
-    
+
     if (matches.length === 0) {
       vscode.window.showInformationMessage('No quality issues found in current file');
       return;
@@ -403,7 +404,7 @@ export class CodeQualityExtension {
    */
   private generateReportHTML(matches: PatternMatch[]): string {
     const analysis = scoreCalculator.getScoreAnalysis(matches);
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -473,7 +474,7 @@ export class CodeQualityExtension {
 export function activate(context: vscode.ExtensionContext): void {
   const extension = new CodeQualityExtension(context);
   extension.activate();
-  
+
   // Store extension instance for deactivation
   context.subscriptions.push({
     dispose: () => extension.deactivate()

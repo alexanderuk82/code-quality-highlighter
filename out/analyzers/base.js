@@ -98,11 +98,14 @@ class BaseAnalyzer {
      */
     createAnalysisError(error) {
         if (error instanceof Error) {
-            return {
+            const result = {
                 type: 'runtime',
-                message: error.message,
-                stack: error.stack
+                message: error.message
             };
+            if (error.stack) {
+                result.stack = error.stack;
+            }
+            return result;
         }
         return {
             type: 'runtime',
@@ -133,6 +136,7 @@ class BaseAnalyzer {
     /**
      * Helper method to create range from AST node
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createRangeFromNode(node) {
         // This will be implemented with actual VS Code Range when we integrate
         if (node.loc) {

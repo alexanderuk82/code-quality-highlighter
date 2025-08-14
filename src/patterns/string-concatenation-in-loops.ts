@@ -1,8 +1,8 @@
-import { 
-  PatternRule, 
-  PatternMatcher, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatcher,
+  AnyASTNode,
+  MatchContext,
   PatternCategory,
   TooltipTemplate
 } from '../types';
@@ -11,7 +11,7 @@ import {
  * Matcher for detecting string concatenation inside loops
  */
 export class StringConcatenationInLoopsMatcher implements PatternMatcher {
-  public match(node: ASTNode, context: MatchContext): boolean {
+  public match(node: AnyASTNode, context: MatchContext): boolean {
     // Check for assignment expressions with += operator
     if (this.isStringConcatenationAssignment(node) && this.isInsideLoop(node, context)) {
       return true;
@@ -25,61 +25,62 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
     return false;
   }
 
-  public getMatchDetails(node: ASTNode, _context: MatchContext) {
+  public getMatchDetails(node: AnyASTNode, _context: MatchContext) {
     const concatenationType = this.getConcatenationType(node);
-    
+
     return {
       complexity: 2,
-      impact: `O(n²) string concatenation - each += creates new string object, copying all previous content`,
+      impact: 'O(n²) string concatenation - each += creates new string object, copying all previous content',
       suggestion: `Use array.join() or template literals for O(n) performance instead of ${concatenationType}`
     };
   }
 
-  private isStringConcatenationAssignment(node: ASTNode): boolean {
+  private isStringConcatenationAssignment(node: AnyASTNode): boolean {
     if (node.type !== 'AssignmentExpression') return false;
-    
-    const operator = node.operator;
+
+    const operator = (node as any).operator;
     if (operator !== '+=') return false;
 
     // Check if we're concatenating strings
     return this.isLikelyStringOperation(node);
   }
 
-  private isStringConcatenationExpression(node: ASTNode): boolean {
+  private isStringConcatenationExpression(node: AnyASTNode): boolean {
     if (node.type !== 'BinaryExpression') return false;
-    
-    const operator = node.operator;
+
+    const operator = (node as any).operator;
     if (operator !== '+') return false;
 
     // Check if this is likely string concatenation (not numeric addition)
     return this.isLikelyStringOperation(node);
   }
 
-  private isLikelyStringOperation(node: ASTNode): boolean {
+  private isLikelyStringOperation(node: AnyASTNode): boolean {
     // Heuristics to detect string operations:
-    
+
     // 1. String literals involved
     if (this.hasStringLiteral(node)) return true;
-    
+
     // 2. Template literals
     if (this.hasTemplateLiteral(node)) return true;
-    
+
     // 3. Common string variables/properties
     if (this.hasStringVariables(node)) return true;
-    
+
     // 4. String method calls
     if (this.hasStringMethods(node)) return true;
-    
+
     return false;
   }
 
-  private hasStringLiteral(node: ASTNode): boolean {
+  private hasStringLiteral(node: AnyASTNode): boolean {
     // Check all properties recursively for string literals
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkNode = (n: any): boolean => {
       if (!n || typeof n !== 'object') return false;
-      
+
       if (n.type === 'Literal' && typeof n.value === 'string') return true;
-      
+
       for (const key in n) {
         const value = n[key];
         if (Array.isArray(value)) {
@@ -88,19 +89,20 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
           return true;
         }
       }
-      
+
       return false;
     };
-    
+
     return checkNode(node);
   }
 
-  private hasTemplateLiteral(node: ASTNode): boolean {
+  private hasTemplateLiteral(node: AnyASTNode): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkNode = (n: any): boolean => {
       if (!n || typeof n !== 'object') return false;
-      
+
       if (n.type === 'TemplateLiteral') return true;
-      
+
       for (const key in n) {
         const value = n[key];
         if (Array.isArray(value)) {
@@ -109,28 +111,29 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
           return true;
         }
       }
-      
+
       return false;
     };
-    
+
     return checkNode(node);
   }
 
-  private hasStringVariables(node: ASTNode): boolean {
+  private hasStringVariables(node: AnyASTNode): boolean {
     // Common string variable patterns
     const stringVariablePatterns = [
       'html', 'text', 'content', 'message', 'output', 'result',
       'buffer', 'str', 'string', 'markup', 'code', 'sql'
     ];
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkNode = (n: any): boolean => {
       if (!n || typeof n !== 'object') return false;
-      
-      if (n.type === 'Identifier' && stringVariablePatterns.some(pattern => 
+
+      if (n.type === 'Identifier' && stringVariablePatterns.some(pattern =>
         n.name?.toLowerCase().includes(pattern))) {
         return true;
       }
-      
+
       for (const key in n) {
         const value = n[key];
         if (Array.isArray(value)) {
@@ -139,30 +142,31 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
           return true;
         }
       }
-      
+
       return false;
     };
-    
+
     return checkNode(node);
   }
 
-  private hasStringMethods(node: ASTNode): boolean {
+  private hasStringMethods(node: AnyASTNode): boolean {
     const stringMethods = [
       'toString', 'valueOf', 'charAt', 'charCodeAt', 'concat',
       'indexOf', 'lastIndexOf', 'slice', 'substring', 'substr',
       'toLowerCase', 'toUpperCase', 'trim', 'replace', 'split'
     ];
-    
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const checkNode = (n: any): boolean => {
       if (!n || typeof n !== 'object') return false;
-      
+
       if (n.type === 'CallExpression' && n.callee?.type === 'MemberExpression') {
         const property = n.callee.property;
         if (property && stringMethods.includes(property.name)) {
           return true;
         }
       }
-      
+
       for (const key in n) {
         const value = n[key];
         if (Array.isArray(value)) {
@@ -171,45 +175,45 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
           return true;
         }
       }
-      
+
       return false;
     };
-    
+
     return checkNode(node);
   }
 
-  private isInsideLoop(node: ASTNode, context: MatchContext): boolean {
+  private isInsideLoop(node: AnyASTNode, context: MatchContext): boolean {
     // Simplified loop detection - in real implementation, traverse AST parents
     const sourceCode = context.sourceCode;
     const nodeStart = node.start || 0;
-    
+
     const codeBeforeNode = sourceCode.substring(0, nodeStart);
     const loopKeywords = [
-      'for (', 'for(', 'while (', 'while(', 'do {', 
+      'for (', 'for(', 'while (', 'while(', 'do {',
       '.forEach(', '.map(', '.filter(', '.reduce('
     ];
-    
+
     return loopKeywords.some(keyword => {
       const lastIndex = codeBeforeNode.lastIndexOf(keyword);
       if (lastIndex === -1) return false;
-      
+
       const codeBetween = sourceCode.substring(lastIndex, nodeStart);
       const openBraces = (codeBetween.match(/{/g) || []).length;
       const closeBraces = (codeBetween.match(/}/g) || []).length;
-      
+
       return openBraces > closeBraces;
     });
   }
 
-  private getConcatenationType(node: ASTNode): string {
-    if (node.type === 'AssignmentExpression' && node.operator === '+=') {
+  private getConcatenationType(node: AnyASTNode): string {
+    if (node.type === 'AssignmentExpression' && (node as any).operator === '+=') {
       return 'string += operator';
     }
-    
-    if (node.type === 'BinaryExpression' && node.operator === '+') {
+
+    if (node.type === 'BinaryExpression' && (node as any).operator === '+') {
       return 'string + operator';
     }
-    
+
     return 'string concatenation';
   }
 }

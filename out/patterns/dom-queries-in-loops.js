@@ -61,11 +61,13 @@ class DOMQueriesInLoopsMatcher {
     isInsideLoop(node, context) {
         const sourceCode = context.sourceCode;
         const nodeStart = node.start || 0;
+        if (nodeStart <= 0)
+            return false;
+        return this.isDirectlyInLoop(sourceCode, nodeStart) && !this.isInFunctionOutsideLoop(sourceCode, nodeStart);
+    }
+    isDirectlyInLoop(sourceCode, nodeStart) {
         const codeBeforeNode = sourceCode.substring(0, nodeStart);
-        const loopKeywords = [
-            'for (', 'for(', 'while (', 'while(', 'do {',
-            '.forEach(', '.map(', '.filter(', '.reduce('
-        ];
+        const loopKeywords = ['for (', 'for(', 'while (', 'while(', 'do {', '.forEach(', '.map(', '.filter(', '.reduce('];
         return loopKeywords.some(keyword => {
             const lastIndex = codeBeforeNode.lastIndexOf(keyword);
             if (lastIndex === -1)
@@ -76,21 +78,74 @@ class DOMQueriesInLoopsMatcher {
             return openBraces > closeBraces;
         });
     }
+    isInFunctionOutsideLoop(sourceCode, nodeStart) {
+        const codeBeforeNode = sourceCode.substring(0, nodeStart);
+        const functionMatches = Array.from(codeBeforeNode.matchAll(/\bfunction\s+(\w+)\s*\(/g));
+        if (functionMatches.length === 0)
+            return false;
+        const lastFunction = functionMatches[functionMatches.length - 1];
+        if (!lastFunction)
+            return false;
+        const functionStartIndex = lastFunction.index || 0;
+        const functionEndIndex = this.findFunctionEndIndex(sourceCode, functionStartIndex);
+        if (nodeStart > functionStartIndex && (functionEndIndex === -1 || nodeStart < functionEndIndex)) {
+            const codeAfterFunction = sourceCode.substring(functionEndIndex === -1 ? nodeStart : functionEndIndex);
+            const loopKeywords = ['for (', 'for(', 'while (', 'while(', 'do {', '.forEach(', '.map(', '.filter(', '.reduce('];
+            return loopKeywords.some(keyword => codeAfterFunction.includes(keyword));
+        }
+        return false;
+    }
+    findFunctionEndIndex(sourceCode, functionStartIndex) {
+        const codeFromFunction = sourceCode.substring(functionStartIndex);
+        let braceCount = 0;
+        let foundOpenBrace = false;
+        for (let i = 0; i < codeFromFunction.length; i++) {
+            if (codeFromFunction[i] === '{') {
+                foundOpenBrace = true;
+                braceCount++;
+            }
+            else if (codeFromFunction[i] === '}' && foundOpenBrace) {
+                braceCount--;
+                if (braceCount === 0) {
+                    return functionStartIndex + i;
+                }
+            }
+        }
+        return -1;
+    }
     isDOMQueryMethod(node) {
         const methodName = this.getMethodName(node);
         return methodName ? this.domQueryMethods.includes(methodName) : false;
     }
     isDOMManipulationMethod(node) {
         const methodName = this.getMethodName(node);
-        return methodName ? this.domManipulationMethods.includes(methodName) : false;
+        if (!methodName || !this.domManipulationMethods.includes(methodName))
+            return false;
+        // Only detect if it's called on document or has DOM context
+        return this.isDOMContextCall(node);
     }
     isExpensiveStyleMethod(node) {
         const methodName = this.getMethodName(node);
         return methodName ? this.expensiveStyleMethods.includes(methodName) : false;
     }
     getMethodName(node) {
-        if (node.type === 'CallExpression' && node.callee?.type === 'MemberExpression') {
-            return node.callee.property?.name || null;
+        if (node.type === 'CallExpression') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const callNode = node;
+            // Handle member expressions like obj.method()
+            if (callNode.callee?.type === 'MemberExpression') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const memberExpr = callNode.callee;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const property = memberExpr.property;
+                return property?.name || null;
+            }
+            // Handle direct function calls like getComputedStyle()
+            if (callNode.callee?.type === 'Identifier') {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const identifier = callNode.callee;
+                return identifier.name || null;
+            }
         }
         return null;
     }
@@ -122,6 +177,36 @@ class DOMQueriesInLoopsMatcher {
             'Style/Layout': 'Cache layout properties outside the loop'
         };
         return suggestions[operationType] || 'Cache DOM operations outside the loop';
+    }
+    isDOMContextCall(node) {
+        if (node.type !== 'CallExpression')
+            return false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const callNode = node;
+        // Check if it's called as a member expression (obj.method())
+        if (callNode.callee?.type === 'MemberExpression') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const memberExpr = callNode.callee;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const property = memberExpr.property;
+            const methodName = property?.name;
+            // Always detect DOM methods called on any object (container.appendChild, etc.)
+            if (this.domManipulationMethods.includes(methodName) ||
+                this.domQueryMethods.includes(methodName) ||
+                this.expensiveStyleMethods.includes(methodName)) {
+                return true;
+            }
+        }
+        // For direct calls like createElement(), only detect if it's a global DOM method
+        if (callNode.callee?.type === 'Identifier') {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const identifier = callNode.callee;
+            const methodName = identifier.name;
+            // Only detect global DOM methods, not user-defined functions
+            const globalDOMMethods = ['getComputedStyle', 'querySelector', 'querySelectorAll'];
+            return globalDOMMethods.includes(methodName);
+        }
+        return false;
     }
 }
 exports.DOMQueriesInLoopsMatcher = DOMQueriesInLoopsMatcher;

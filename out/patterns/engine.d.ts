@@ -1,4 +1,4 @@
-import { PatternRule, PatternMatch, ASTNode, MatchContext, SupportedLanguage, PatternCategory, Severity } from '../types';
+import { PatternRule, PatternMatch, AnyASTNode, MatchContext, SupportedLanguage, PatternCategory, Severity } from '../types';
 /**
  * Core pattern detection engine
  */
@@ -33,7 +33,7 @@ export declare class PatternEngine {
     /**
      * Detect patterns in AST for a specific language
      */
-    detectPatterns(ast: ASTNode, context: MatchContext, enabledCategories?: PatternCategory[]): Promise<PatternMatch[]>;
+    detectPatterns(ast: AnyASTNode, context: MatchContext, enabledCategories?: PatternCategory[]): Promise<PatternMatch[]>;
     /**
      * Apply a single rule to AST
      */

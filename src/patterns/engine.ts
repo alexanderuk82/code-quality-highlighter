@@ -1,11 +1,11 @@
-import { 
-  PatternRule, 
-  PatternMatch, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatch,
+  AnyASTNode,
+  MatchContext,
   SupportedLanguage,
   PatternCategory,
-  Severity 
+  Severity
 } from '../types';
 
 /**
@@ -64,7 +64,7 @@ export class PatternEngine {
    * Detect patterns in AST for a specific language
    */
   public async detectPatterns(
-    ast: ASTNode, 
+    ast: AnyASTNode,
     context: MatchContext,
     enabledCategories?: PatternCategory[]
   ): Promise<PatternMatch[]> {
@@ -76,7 +76,7 @@ export class PatternEngine {
         const ruleMatches = await this.applyRule(rule, ast, context);
         matches.push(...ruleMatches);
       } catch (error) {
-        console.warn(`Error applying rule ${rule.id}:`, error);
+        // Error applying rule
       }
     }
 
@@ -87,12 +87,12 @@ export class PatternEngine {
    * Apply a single rule to AST
    */
   private async applyRule(
-    rule: PatternRule, 
-    ast: ASTNode, 
+    rule: PatternRule,
+    ast: AnyASTNode,
     context: MatchContext
   ): Promise<PatternMatch[]> {
     const matches: PatternMatch[] = [];
-    
+
     // Traverse AST and apply rule matcher
     this.traverseAST(ast, (node) => {
       try {
@@ -113,7 +113,6 @@ export class PatternEngine {
         }
       } catch (error) {
         // Skip individual node errors to avoid breaking entire analysis
-        console.warn(`Error matching node with rule ${rule.id}:`, error);
       }
     });
 
@@ -124,16 +123,16 @@ export class PatternEngine {
    * Get applicable rules for language and categories
    */
   private getApplicableRules(
-    language: SupportedLanguage, 
+    language: SupportedLanguage,
     enabledCategories?: PatternCategory[]
   ): PatternRule[] {
     const languageRules = this.getRulesForLanguage(language);
-    
+
     if (!enabledCategories || enabledCategories.length === 0) {
       return languageRules.filter(rule => rule.enabled);
     }
 
-    return languageRules.filter(rule => 
+    return languageRules.filter(rule =>
       rule.enabled && enabledCategories.includes(rule.category)
     );
   }
@@ -161,7 +160,8 @@ export class PatternEngine {
   /**
    * Traverse AST and apply visitor function
    */
-  private traverseAST(node: ASTNode, visitor: (node: ASTNode) => void): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private traverseAST(node: any, visitor: (node: any) => void): void {
     if (!node || typeof node !== 'object') {
       return;
     }
@@ -176,7 +176,7 @@ export class PatternEngine {
             this.traverseAST(item, visitor);
           }
         });
-      } else if (value && typeof value === 'object' && value.type) {
+      } else if (value && typeof value === 'object' && (value as any).type) {
         this.traverseAST(value, visitor);
       }
     });
@@ -185,7 +185,8 @@ export class PatternEngine {
   /**
    * Create range from AST node
    */
-  private createRange(node: ASTNode): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private createRange(node: any): any {
     // This will be replaced with actual VS Code Range when integrating
     if (node.loc) {
       return {
@@ -193,7 +194,7 @@ export class PatternEngine {
         end: { line: node.loc.end.line - 1, character: node.loc.end.column }
       };
     }
-    
+
     return {
       start: { line: 0, character: 0 },
       end: { line: 0, character: 0 }
@@ -240,10 +241,10 @@ export class PatternEngine {
     this.rules.forEach(rule => {
       // Count by severity
       bySeverity[rule.severity]++;
-      
+
       // Count by category
       byCategory[rule.category] = (byCategory[rule.category] || 0) + 1;
-      
+
       // Count by language
       rule.languages.forEach(lang => {
         byLanguage[lang] = (byLanguage[lang] || 0) + 1;

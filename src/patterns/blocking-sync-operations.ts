@@ -1,8 +1,8 @@
-import { 
-  PatternRule, 
-  PatternMatcher, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatcher,
+  ASTNode,
+  MatchContext,
   PatternCategory,
   TooltipTemplate
 } from '../types';
@@ -16,13 +16,13 @@ export class BlockingSyncOperationsMatcher implements PatternMatcher {
     'readFileSync', 'writeFileSync', 'appendFileSync', 'copyFileSync', 'unlinkSync',
     'mkdirSync', 'rmdirSync', 'readdirSync', 'statSync', 'lstatSync', 'existsSync',
     'accessSync', 'chmodSync', 'chownSync', 'renameSync', 'truncateSync',
-    
+
     // Network operations
     'execSync', 'spawnSync',
-    
+
     // Crypto operations
     'pbkdf2Sync', 'scryptSync', 'randomFillSync', 'randomBytesSync',
-    
+
     // Other blocking operations
     'readSync', 'writeSync'
   ];
@@ -54,7 +54,7 @@ export class BlockingSyncOperationsMatcher implements PatternMatcher {
   public getMatchDetails(node: ASTNode, _context: MatchContext) {
     const operationName = this.getOperationName(node);
     const estimatedBlockTime = this.estimateBlockingTime(operationName);
-    
+
     return {
       complexity: 1,
       impact: `Blocks event loop for ${estimatedBlockTime}ms+ - freezes UI and prevents other operations`,
@@ -64,75 +64,75 @@ export class BlockingSyncOperationsMatcher implements PatternMatcher {
 
   private isDirectSyncCall(node: ASTNode): boolean {
     if (node.type !== 'CallExpression') return false;
-    
-    const callee = node.callee;
+
+    const callee = (node as any).callee;
     if (callee?.type === 'Identifier') {
       return this.blockingOperations.includes(callee.name);
     }
-    
+
     return false;
   }
 
   private isFsSyncCall(node: ASTNode): boolean {
     if (node.type !== 'CallExpression') return false;
-    
-    const callee = node.callee;
+
+    const callee = (node as any).callee;
     if (callee?.type === 'MemberExpression') {
-      const object = callee.object;
-      const property = callee.property;
-      
+      const object = (callee as any).object;
+      const property = (callee as any).property;
+
       if (object?.name === 'fs' && property?.name) {
         return this.blockingOperations.includes(property.name);
       }
     }
-    
+
     return false;
   }
 
   private isChildProcessSyncCall(node: ASTNode): boolean {
     if (node.type !== 'CallExpression') return false;
-    
-    const callee = node.callee;
+
+    const callee = (node as any).callee;
     if (callee?.type === 'MemberExpression') {
-      const object = callee.object;
-      const property = callee.property;
-      
+      const object = (callee as any).object;
+      const property = (callee as any).property;
+
       if (object?.name === 'child_process' && property?.name) {
         return ['execSync', 'spawnSync'].includes(property.name);
       }
     }
-    
+
     return false;
   }
 
   private isCryptoSyncCall(node: ASTNode): boolean {
     if (node.type !== 'CallExpression') return false;
-    
-    const callee = node.callee;
+
+    const callee = (node as any).callee;
     if (callee?.type === 'MemberExpression') {
-      const object = callee.object;
-      const property = callee.property;
-      
+      const object = (callee as any).object;
+      const property = (callee as any).property;
+
       if (object?.name === 'crypto' && property?.name) {
         return ['pbkdf2Sync', 'scryptSync', 'randomFillSync', 'randomBytesSync'].includes(property.name);
       }
     }
-    
+
     return false;
   }
 
   private getOperationName(node: ASTNode): string {
     if (node.type !== 'CallExpression') return 'unknown';
-    
-    const callee = node.callee;
+
+    const callee = (node as any).callee;
     if (callee?.type === 'Identifier') {
-      return callee.name;
+      return (callee as any).name;
     }
-    
+
     if (callee?.type === 'MemberExpression') {
-      return callee.property?.name || 'unknown';
+      return (callee as any).property?.name || 'unknown';
     }
-    
+
     return 'unknown';
   }
 
@@ -147,7 +147,7 @@ export class BlockingSyncOperationsMatcher implements PatternMatcher {
       'scryptSync': 300,
       'readdirSync': 30
     };
-    
+
     return timeEstimates[operationName] || 50;
   }
 }

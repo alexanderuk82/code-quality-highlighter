@@ -1,10 +1,10 @@
-import { 
-  ASTNode, 
-  AnalysisResult, 
-  AnalysisError, 
-  PatternMatch, 
-  SupportedLanguage, 
-  MatchContext 
+import {
+  AnyASTNode,
+  AnalysisResult,
+  AnalysisError,
+  PatternMatch,
+  SupportedLanguage,
+  MatchContext
 } from '../types';
 
 /**
@@ -24,7 +24,7 @@ export interface IAnalyzer {
   /**
    * Parse source code into AST
    */
-  parseAST(sourceCode: string): Promise<ASTNode>;
+  parseAST(sourceCode: string): Promise<AnyASTNode>;
 
   /**
    * Check if analyzer supports the given file
@@ -59,7 +59,7 @@ export abstract class BaseAnalyzer implements IAnalyzer {
 
       // Parse AST
       const ast = await this.parseAST(sourceCode);
-      
+
       // Create analysis context
       const context: MatchContext = {
         filePath,
@@ -78,7 +78,7 @@ export abstract class BaseAnalyzer implements IAnalyzer {
     }
 
     const analysisTime = performance.now() - startTime;
-    
+
     return this.createAnalysisResult(filePath, matches, errors, analysisTime);
   }
 
@@ -93,12 +93,12 @@ export abstract class BaseAnalyzer implements IAnalyzer {
   /**
    * Abstract method to parse source code into AST
    */
-  public abstract parseAST(sourceCode: string): Promise<ASTNode>;
+  public abstract parseAST(sourceCode: string): Promise<AnyASTNode>;
 
   /**
    * Abstract method to detect patterns in AST
    */
-  protected abstract detectPatterns(ast: ASTNode, context: MatchContext): Promise<PatternMatch[]>;
+  protected abstract detectPatterns(ast: AnyASTNode, context: MatchContext): Promise<PatternMatch[]>;
 
   /**
    * Get file extension from file path
@@ -136,9 +136,9 @@ export abstract class BaseAnalyzer implements IAnalyzer {
    * Create analysis result
    */
   protected createAnalysisResult(
-    filePath: string, 
-    matches: PatternMatch[], 
-    errors: AnalysisError[], 
+    filePath: string,
+    matches: PatternMatch[],
+    errors: AnalysisError[],
     analysisTime: number
   ): AnalysisResult {
     // Import score calculator here to avoid circular dependency
@@ -160,13 +160,18 @@ export abstract class BaseAnalyzer implements IAnalyzer {
    */
   protected createAnalysisError(error: unknown): AnalysisError {
     if (error instanceof Error) {
-      return {
+      const result: AnalysisError = {
         type: 'runtime',
-        message: error.message,
-        stack: error.stack
+        message: error.message
       };
+
+      if (error.stack) {
+        result.stack = error.stack;
+      }
+
+      return result;
     }
-    
+
     return {
       type: 'runtime',
       message: String(error)
@@ -198,7 +203,8 @@ export abstract class BaseAnalyzer implements IAnalyzer {
   /**
    * Helper method to create range from AST node
    */
-  protected createRangeFromNode(node: ASTNode): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected createRangeFromNode(node: AnyASTNode): any {
     // This will be implemented with actual VS Code Range when we integrate
     if (node.loc) {
       return {
@@ -206,7 +212,7 @@ export abstract class BaseAnalyzer implements IAnalyzer {
         end: { line: node.loc.end.line - 1, character: node.loc.end.column }
       };
     }
-    
+
     return {
       start: { line: 0, character: 0 },
       end: { line: 0, character: 0 }

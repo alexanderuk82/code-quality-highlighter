@@ -1,10 +1,10 @@
-import { PatternRule, PatternMatcher, ASTNode, MatchContext } from '../types';
+import { PatternRule, PatternMatcher, AnyASTNode, MatchContext } from '../types';
 /**
  * Matcher for detecting string concatenation inside loops
  */
 export declare class StringConcatenationInLoopsMatcher implements PatternMatcher {
-    match(node: ASTNode, context: MatchContext): boolean;
-    getMatchDetails(node: ASTNode, _context: MatchContext): {
+    match(node: AnyASTNode, context: MatchContext): boolean;
+    getMatchDetails(node: AnyASTNode, _context: MatchContext): {
         complexity: number;
         impact: string;
         suggestion: string;

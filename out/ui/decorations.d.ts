@@ -26,7 +26,7 @@ export declare class DecorationManager {
     /**
      * Get active decorations for a file
      */
-    getActiveDecorations(filePath: string): PatternMatch[];
+    getActiveDecorations(filePath: string): any[];
     /**
      * Update decorations when configuration changes
      */

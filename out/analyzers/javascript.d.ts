@@ -1,5 +1,5 @@
 import { BaseAnalyzer } from './base';
-import { ASTNode, PatternMatch, MatchContext, SupportedLanguage } from '../types';
+import { AnyASTNode, PatternMatch, MatchContext, SupportedLanguage } from '../types';
 /**
  * JavaScript/TypeScript analyzer using Babel parser
  */
@@ -9,11 +9,11 @@ export declare class JavaScriptAnalyzer extends BaseAnalyzer {
     /**
      * Parse JavaScript/TypeScript source code into AST
      */
-    parseAST(sourceCode: string): Promise<ASTNode>;
+    parseAST(sourceCode: string): Promise<AnyASTNode>;
     /**
      * Detect patterns in JavaScript/TypeScript AST
      */
-    protected detectPatterns(ast: ASTNode, context: MatchContext): Promise<PatternMatch[]>;
+    protected detectPatterns(ast: AnyASTNode, context: MatchContext): Promise<PatternMatch[]>;
     /**
      * Detect JavaScript-specific patterns using Babel traverse
      */
@@ -84,7 +84,7 @@ export declare class TypeScriptAnalyzer extends JavaScriptAnalyzer {
     /**
      * Detect TypeScript-specific patterns
      */
-    protected detectPatterns(ast: ASTNode, context: MatchContext): Promise<PatternMatch[]>;
+    protected detectPatterns(ast: AnyASTNode, context: MatchContext): Promise<PatternMatch[]>;
     /**
      * Detect TypeScript-specific patterns
      */

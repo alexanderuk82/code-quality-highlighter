@@ -1,6 +1,7 @@
 import { BlockingSyncOperationsMatcher } from '../../../src/patterns/blocking-sync-operations';
 import { MatchContext, SupportedLanguage } from '../../../src/types';
 import { parse } from '@babel/parser';
+import { File } from '@babel/types';
 
 describe('BlockingSyncOperationsMatcher', () => {
   let matcher: BlockingSyncOperationsMatcher;
@@ -24,8 +25,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const data = fs.readFileSync('file.txt', 'utf8');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'readFileSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'readFileSync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -37,8 +39,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         fs.writeFileSync('output.txt', data);
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'writeFileSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'writeFileSync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -52,11 +55,12 @@ describe('BlockingSyncOperationsMatcher', () => {
         const data = fs.readFileSync('file.txt');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
       
-      const statsSyncCall = this.findCallExpression(ast, 'statSync');
-      const existsSyncCall = this.findCallExpression(ast, 'existsSync');
-      const readSyncCall = this.findCallExpression(ast, 'readFileSync');
+      const statsSyncCall = findCallExpression(ast, 'statSync');
+      const existsSyncCall = findCallExpression(ast, 'existsSync');
+      const readSyncCall = findCallExpression(ast, 'readFileSync');
       
       expect(matcher.match(statsSyncCall, context)).toBe(true);
       expect(matcher.match(existsSyncCall, context)).toBe(true);
@@ -71,8 +75,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const result = child_process.execSync('git status');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'execSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'execSync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -84,8 +89,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const result = spawnSync('ls', ['-la']);
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'spawnSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'spawnSync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -99,8 +105,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'pbkdf2Sync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'pbkdf2Sync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -112,8 +119,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const bytes = crypto.randomBytesSync(256);
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'randomBytesSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'randomBytesSync');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -128,8 +136,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         fs.readFile('file.txt', callback);
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const awaitCall = this.findCallExpression(ast, 'readFile');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const awaitCall = findCallExpression(ast, 'readFile');
       
       const result = matcher.match(awaitCall, context);
       expect(result).toBe(false);
@@ -141,8 +150,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         exec('git status', callback);
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'exec');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'exec');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(false);
@@ -156,8 +166,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const data = fs.readFileSync('file.txt');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'readFileSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'readFileSync');
       
       const details = matcher.getMatchDetails(callExpression, context);
       expect(details.complexity).toBe(1);
@@ -171,8 +182,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const result = child_process.execSync('command');
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'execSync');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'execSync');
       
       const details = matcher.getMatchDetails(callExpression, context);
       expect(details.suggestion).toContain('async exec');
@@ -186,8 +198,9 @@ describe('BlockingSyncOperationsMatcher', () => {
         const obj = { readFileSync: true };
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const identifier = ast.body[0].declarations[0].init;
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const identifier = (ast.program.body[0] as any).declarations[0].init;
       
       expect(() => {
         matcher.match(identifier, context);
@@ -212,36 +225,37 @@ describe('BlockingSyncOperationsMatcher', () => {
     });
   });
 
-  // Helper method to find call expressions in AST
-  private findCallExpression(ast: any, methodName: string): any {
-    let found: any = null;
-    
-    const traverse = (node: any) => {
-      if (node && typeof node === 'object') {
-        if (node.type === 'CallExpression') {
-          const callee = node.callee;
-          if (callee?.type === 'MemberExpression' && callee.property?.name === methodName) {
-            found = node;
-            return;
-          }
-          if (callee?.type === 'Identifier' && callee.name === methodName) {
-            found = node;
-            return;
-          }
+});
+
+// Helper function to find call expressions in AST
+function findCallExpression(ast: any, methodName: string): any {
+  let found: any = null;
+  
+  const traverse = (node: any) => {
+    if (node && typeof node === 'object') {
+      if (node.type === 'CallExpression') {
+        const callee = node.callee;
+        if (callee?.type === 'MemberExpression' && callee.property?.name === methodName) {
+          found = node;
+          return;
         }
-        
-        for (const key in node) {
-          const value = node[key];
-          if (Array.isArray(value)) {
-            value.forEach(item => traverse(item));
-          } else {
-            traverse(value);
-          }
+        if (callee?.type === 'Identifier' && callee.name === methodName) {
+          found = node;
+          return;
         }
       }
-    };
-    
-    traverse(ast);
-    return found;
-  }
-});
+      
+      for (const key in node) {
+        const value = node[key];
+        if (Array.isArray(value)) {
+          value.forEach(item => traverse(item));
+        } else {
+          traverse(value);
+        }
+      }
+    }
+  };
+  
+  traverse(ast);
+  return found;
+}

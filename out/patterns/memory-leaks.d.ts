@@ -4,9 +4,9 @@ import { PatternRule, PatternMatcher, ASTNode, MatchContext } from '../types';
  */
 export declare class MemoryLeaksMatcher implements PatternMatcher {
     private readonly eventMethods;
-    private readonly _cleanupMethods;
+    private readonly cleanupMethods;
     private readonly timerMethods;
-    private readonly _cleanupTimerMethods;
+    private readonly cleanupTimerMethods;
     match(node: ASTNode, context: MatchContext): boolean;
     getMatchDetails(node: ASTNode, context: MatchContext): {
         complexity: number;

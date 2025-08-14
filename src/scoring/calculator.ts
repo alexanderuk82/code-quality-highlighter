@@ -1,9 +1,9 @@
-import { 
-  PatternMatch, 
-  QualityScore, 
-  ScoreBreakdown, 
-  Severity, 
-  PatternCategory 
+import {
+  PatternMatch,
+  QualityScore,
+  ScoreBreakdown,
+  Severity,
+  PatternCategory
 } from '../types';
 
 /**
@@ -24,7 +24,7 @@ export class ScoreCalculator {
   public calculateScore(matches: PatternMatch[]): QualityScore {
     const breakdown = this.calculateBreakdown(matches);
     const totalScore = Math.max(0, Math.min(100, breakdown.total));
-    
+
     return {
       value: totalScore,
       label: this.getScoreLabel(totalScore),
@@ -108,7 +108,7 @@ export class ScoreCalculator {
     const breakdown = this.calculateBreakdown(matches);
     const severityCounts = this.countBySeverity(matches);
     const categoryCounts = this.countByCategory(matches);
-    
+
     return {
       breakdown,
       severityCounts,
@@ -143,7 +143,7 @@ export class ScoreCalculator {
    * Generate improvement recommendations
    */
   private generateRecommendations(
-    breakdown: ScoreBreakdown, 
+    breakdown: ScoreBreakdown,
     severityCounts: Record<Severity, number>
   ): string[] {
     const recommendations: string[] = [];
@@ -195,23 +195,23 @@ export class ScoreCalculator {
     }
 
     const change = currentScore - previousScore;
-    
+
     if (Math.abs(change) < 2) {
       return { direction: 'neutral', change, message: 'No significant change' };
     }
 
     if (change > 0) {
-      return { 
-        direction: 'up', 
-        change, 
-        message: `Improved by ${change} points` 
+      return {
+        direction: 'up',
+        change,
+        message: `Improved by ${change} points`
       };
     }
 
-    return { 
-      direction: 'down', 
-      change, 
-      message: `Decreased by ${Math.abs(change)} points` 
+    return {
+      direction: 'down',
+      change,
+      message: `Decreased by ${Math.abs(change)} points`
     };
   }
 }

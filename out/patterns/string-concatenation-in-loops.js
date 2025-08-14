@@ -21,7 +21,7 @@ class StringConcatenationInLoopsMatcher {
         const concatenationType = this.getConcatenationType(node);
         return {
             complexity: 2,
-            impact: `O(n²) string concatenation - each += creates new string object, copying all previous content`,
+            impact: 'O(n²) string concatenation - each += creates new string object, copying all previous content',
             suggestion: `Use array.join() or template literals for O(n) performance instead of ${concatenationType}`
         };
     }
@@ -61,6 +61,7 @@ class StringConcatenationInLoopsMatcher {
     }
     hasStringLiteral(node) {
         // Check all properties recursively for string literals
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const checkNode = (n) => {
             if (!n || typeof n !== 'object')
                 return false;
@@ -81,6 +82,7 @@ class StringConcatenationInLoopsMatcher {
         return checkNode(node);
     }
     hasTemplateLiteral(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const checkNode = (n) => {
             if (!n || typeof n !== 'object')
                 return false;
@@ -106,6 +108,7 @@ class StringConcatenationInLoopsMatcher {
             'html', 'text', 'content', 'message', 'output', 'result',
             'buffer', 'str', 'string', 'markup', 'code', 'sql'
         ];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const checkNode = (n) => {
             if (!n || typeof n !== 'object')
                 return false;
@@ -132,6 +135,7 @@ class StringConcatenationInLoopsMatcher {
             'indexOf', 'lastIndexOf', 'slice', 'substring', 'substr',
             'toLowerCase', 'toUpperCase', 'trim', 'replace', 'split'
         ];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const checkNode = (n) => {
             if (!n || typeof n !== 'object')
                 return false;

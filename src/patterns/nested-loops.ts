@@ -1,8 +1,8 @@
-import { 
-  PatternRule, 
-  PatternMatcher, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatcher,
+  ASTNode,
+  MatchContext,
   PatternCategory,
   TooltipTemplate
 } from '../types';
@@ -23,8 +23,9 @@ export class NestedLoopMatcher implements PatternMatcher {
 
   public getMatchDetails(node: ASTNode, _context: MatchContext) {
     const nestedLoops = this.countNestedLoops(node);
-    const _estimatedComplexity = Math.pow(10, nestedLoops); // Rough estimate
-    
+    // Rough estimate of time complexity: O(n^nestedLoops)
+    // const estimatedComplexity = Math.pow(10, nestedLoops);
+
     return {
       complexity: nestedLoops,
       impact: `O(n^${nestedLoops}) complexity - potential performance bottleneck`,
@@ -33,9 +34,14 @@ export class NestedLoopMatcher implements PatternMatcher {
   }
 
   private isLoopStatement(node: ASTNode): boolean {
+    // Handle null/undefined nodes
+    if (!node || !node.type) {
+      return false;
+    }
+
     return [
       'ForStatement',
-      'WhileStatement', 
+      'WhileStatement',
       'DoWhileStatement',
       'ForInStatement',
       'ForOfStatement'
@@ -58,7 +64,7 @@ export class NestedLoopMatcher implements PatternMatcher {
       case 'DoWhileStatement':
       case 'ForInStatement':
       case 'ForOfStatement':
-        return node.body || null;
+        return (node as any).body || null;
       default:
         return null;
     }
@@ -73,8 +79,8 @@ export class NestedLoopMatcher implements PatternMatcher {
     }
 
     // Check in block statement
-    if (body.type === 'BlockStatement' && body.body) {
-      return body.body.some((stmt: ASTNode) => this.hasLoopAnywhere(stmt));
+    if (body.type === 'BlockStatement' && (body as any).body) {
+      return (body as any).body.some((stmt: ASTNode) => this.hasLoopAnywhere(stmt));
     }
 
     return false;
@@ -89,7 +95,7 @@ export class NestedLoopMatcher implements PatternMatcher {
 
     // Recursively check all properties
     for (const key in node) {
-      const value = node[key];
+      const value = (node as any)[key];
       if (Array.isArray(value)) {
         if (value.some(item => item && this.hasLoopAnywhere(item))) {
           return true;
@@ -109,7 +115,7 @@ export class NestedLoopMatcher implements PatternMatcher {
     if (!body) return depth;
 
     let maxDepth = depth;
-    
+
     const traverse = (n: ASTNode, currentDepth: number) => {
       if (this.isLoopStatement(n)) {
         maxDepth = Math.max(maxDepth, currentDepth + 1);
@@ -121,7 +127,7 @@ export class NestedLoopMatcher implements PatternMatcher {
 
       // Traverse children
       for (const key in n) {
-        const value = n[key];
+        const value = (n as any)[key];
         if (Array.isArray(value)) {
           value.forEach(item => {
             if (item && typeof item === 'object' && item.type) {

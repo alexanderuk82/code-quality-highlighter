@@ -1,4 +1,4 @@
-import { PatternRule, PatternMatcher, ASTNode, MatchContext } from '../types';
+import { PatternRule, PatternMatcher, AnyASTNode, MatchContext } from '../types';
 /**
  * Matcher for detecting DOM query operations inside loops
  */
@@ -6,14 +6,17 @@ export declare class DOMQueriesInLoopsMatcher implements PatternMatcher {
     private readonly domQueryMethods;
     private readonly domManipulationMethods;
     private readonly expensiveStyleMethods;
-    match(node: ASTNode, context: MatchContext): boolean;
-    getMatchDetails(node: ASTNode, _context: MatchContext): {
+    match(node: AnyASTNode, context: MatchContext): boolean;
+    getMatchDetails(node: AnyASTNode, _context: MatchContext): {
         complexity: number;
         impact: string;
         suggestion: string;
     };
     private isRelevantNode;
     private isInsideLoop;
+    private isDirectlyInLoop;
+    private isInFunctionOutsideLoop;
+    private findFunctionEndIndex;
     private isDOMQueryMethod;
     private isDOMManipulationMethod;
     private isExpensiveStyleMethod;
@@ -21,6 +24,7 @@ export declare class DOMQueriesInLoopsMatcher implements PatternMatcher {
     private getDOMOperationType;
     private estimateComplexity;
     private getSuggestion;
+    private isDOMContextCall;
 }
 /**
  * DOM queries in loops pattern rule

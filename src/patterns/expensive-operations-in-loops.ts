@@ -1,8 +1,8 @@
-import { 
-  PatternRule, 
-  PatternMatcher, 
-  ASTNode, 
-  MatchContext, 
+import {
+  PatternRule,
+  PatternMatcher,
+  AnyASTNode,
+  MatchContext,
   PatternCategory,
   TooltipTemplate
 } from '../types';
@@ -22,15 +22,15 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
     'insertBefore', 'replaceChild'
   ];
 
-  private readonly _expensiveObjectOperations = [
+  private readonly expensiveObjectOperations = [
     'Object.keys', 'Object.values', 'Object.entries', 'Object.assign',
     'JSON.stringify', 'JSON.parse'
   ];
 
-  public match(node: ASTNode, context: MatchContext): boolean {
+  public match(node: AnyASTNode, context: MatchContext): boolean {
     // Only check call expressions inside loops
     if (node.type !== 'CallExpression') return false;
-    
+
     // Check if we're inside a loop
     if (!this.isInsideLoop(node, context)) return false;
 
@@ -49,10 +49,10 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
     return false;
   }
 
-  public getMatchDetails(node: ASTNode, _context: MatchContext) {
+  public getMatchDetails(node: AnyASTNode, _context: MatchContext) {
     const operationType = this.getOperationType(node);
     const methodName = this.getMethodName(node);
-    
+
     return {
       complexity: this.estimateComplexity(operationType, methodName),
       impact: `${operationType} operation in loop creates O(n²) or worse complexity`,
@@ -60,31 +60,32 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
     };
   }
 
-  private isInsideLoop(node: ASTNode, context: MatchContext): boolean {
+  private isInsideLoop(node: AnyASTNode, context: MatchContext): boolean {
     // This is a simplified check - in a real implementation,
     // we would traverse up the AST to check parent nodes
     const sourceCode = context.sourceCode;
     const nodeStart = node.start || 0;
-    
+
     // Look for loop keywords before this node
     const codeBeforeNode = sourceCode.substring(0, nodeStart);
     const loopKeywords = ['for (', 'for(', 'while (', 'while(', 'do {', 'forEach(', '.map(', '.filter('];
-    
+
     return loopKeywords.some(keyword => {
       const lastIndex = codeBeforeNode.lastIndexOf(keyword);
       if (lastIndex === -1) return false;
-      
+
       // Check if there's a closing brace between the loop and our node
       const codeBetween = sourceCode.substring(lastIndex, nodeStart);
       const openBraces = (codeBetween.match(/{/g) || []).length;
       const closeBraces = (codeBetween.match(/}/g) || []).length;
-      
+
       return openBraces > closeBraces; // We're still inside the loop
     });
   }
 
-  private isExpensiveArrayMethod(node: ASTNode): boolean {
-    const callee = node.callee;
+  private isExpensiveArrayMethod(node: AnyASTNode): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
     if (callee?.type === 'MemberExpression') {
       const property = callee.property;
       return property && this.expensiveArrayMethods.includes(property.name);
@@ -92,100 +93,104 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
     return false;
   }
 
-  private isExpensiveDOMOperation(node: ASTNode): boolean {
-    const callee = node.callee;
-    
+  private isExpensiveDOMOperation(node: AnyASTNode): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
+
     // Direct DOM method calls
     if (callee?.type === 'Identifier') {
       return this.expensiveDOMMethods.includes(callee.name);
     }
-    
-    // document.* or element.* calls
-    if (callee?.type === 'MemberExpression') {
-      const _object = callee.object;
-      const property = callee.property;
-      
-      if ((_object?.name === 'document' || _object?.name === 'element') && property) {
-        return this.expensiveDOMMethods.includes(property.name);
-      }
-    }
-    
-    return false;
-  }
 
-  private isExpensiveObjectOperation(node: ASTNode): boolean {
-    const callee = node.callee;
-    
+    // document.* or element.* calls
     if (callee?.type === 'MemberExpression') {
       const object = callee.object;
       const property = callee.property;
-      
-      if (object?.name === 'Object' && property) {
-        return ['keys', 'values', 'entries', 'assign'].includes(property.name);
+
+      if ((object?.name === 'document' || object?.name === 'element') && property) {
+        return this.expensiveDOMMethods.includes(property.name);
       }
-      
+    }
+
+    return false;
+  }
+
+  private isExpensiveObjectOperation(node: AnyASTNode): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
+
+    if (callee?.type === 'MemberExpression') {
+      const object = callee.object;
+      const property = callee.property;
+
+      if (object?.name === 'Object' && property) {
+        return this.expensiveObjectOperations.some(op => op.includes(property.name));
+      }
+
       if (object?.name === 'JSON' && property) {
         return ['stringify', 'parse'].includes(property.name);
       }
     }
-    
+
     return false;
   }
 
-  private isRepeatedFunctionCall(node: ASTNode): boolean {
-    const callee = node.callee;
-    
+  private isRepeatedFunctionCall(node: AnyASTNode): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
+
     // Check for function calls that should be cached
     if (callee?.type === 'MemberExpression') {
-      const object = callee.object;
       const property = callee.property;
-      
+
       // Common patterns that should be cached
       const shouldBeCached = [
         'length', 'size', 'count', 'width', 'height',
         'getAttribute', 'getComputedStyle', 'getBoundingClientRect'
       ];
-      
+
       return property && shouldBeCached.includes(property.name);
     }
-    
+
     return false;
   }
 
-  private getOperationType(node: ASTNode): string {
-    const callee = node.callee;
-    
+  private getOperationType(node: AnyASTNode): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
+
     if (callee?.type === 'MemberExpression') {
       const object = callee.object;
       const property = callee.property;
-      
+
       if (object?.name === 'document' || this.expensiveDOMMethods.includes(property?.name)) {
         return 'DOM';
       }
-      
+
       if (this.expensiveArrayMethods.includes(property?.name)) {
         return 'Array';
       }
-      
+
       if (object?.name === 'Object' || object?.name === 'JSON') {
         return 'Object';
       }
     }
-    
+
     return 'Function';
   }
 
-  private getMethodName(node: ASTNode): string {
-    const callee = node.callee;
-    
+  private getMethodName(node: AnyASTNode): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const callee = (node as any).callee;
+
     if (callee?.type === 'Identifier') {
       return callee.name;
     }
-    
+
     if (callee?.type === 'MemberExpression') {
       return callee.property?.name || 'unknown';
     }
-    
+
     return 'unknown';
   }
 
@@ -201,7 +206,7 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
       'Object.keys': 2,
       'JSON.stringify': 2
     };
-    
+
     return complexityMap[methodName] || 2;
   }
 
@@ -212,7 +217,7 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
       'Object': 'Cache object operations outside the loop',
       'Function': 'Move expensive calculations outside the loop or use memoization'
     };
-    
+
     return suggestions[operationType] || 'Cache this operation outside the loop';
   }
 }

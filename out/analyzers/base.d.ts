@@ -1,4 +1,4 @@
-import { ASTNode, AnalysisResult, AnalysisError, PatternMatch, SupportedLanguage, MatchContext } from '../types';
+import { AnyASTNode, AnalysisResult, AnalysisError, PatternMatch, SupportedLanguage, MatchContext } from '../types';
 /**
  * Base analyzer interface for all language analyzers
  */
@@ -14,7 +14,7 @@ export interface IAnalyzer {
     /**
      * Parse source code into AST
      */
-    parseAST(sourceCode: string): Promise<ASTNode>;
+    parseAST(sourceCode: string): Promise<AnyASTNode>;
     /**
      * Check if analyzer supports the given file
      */
@@ -37,11 +37,11 @@ export declare abstract class BaseAnalyzer implements IAnalyzer {
     /**
      * Abstract method to parse source code into AST
      */
-    abstract parseAST(sourceCode: string): Promise<ASTNode>;
+    abstract parseAST(sourceCode: string): Promise<AnyASTNode>;
     /**
      * Abstract method to detect patterns in AST
      */
-    protected abstract detectPatterns(ast: ASTNode, context: MatchContext): Promise<PatternMatch[]>;
+    protected abstract detectPatterns(ast: AnyASTNode, context: MatchContext): Promise<PatternMatch[]>;
     /**
      * Get file extension from file path
      */
@@ -78,7 +78,7 @@ export declare abstract class BaseAnalyzer implements IAnalyzer {
     /**
      * Helper method to create range from AST node
      */
-    protected createRangeFromNode(node: ASTNode): any;
+    protected createRangeFromNode(node: AnyASTNode): any;
 }
 /**
  * Factory for creating analyzers

@@ -27,8 +27,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0]; // Outer for loop
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any; // Babel File type
+      const forStatement = ast.program.body[0]; // Outer for loop
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -45,8 +46,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0]; // Outer for loop
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0]; // Outer for loop
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -63,8 +65,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0]; // Outer for loop
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0]; // Outer for loop
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -81,8 +84,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0]; // Outer for loop
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0]; // Outer for loop
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -97,8 +101,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(false);
@@ -114,9 +119,10 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const firstForStatement = ast.body[0];
-      const secondForStatement = ast.body[1];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const firstForStatement = ast.program.body[0];
+      const secondForStatement = ast.program.body[1];
       
       expect(matcher.match(firstForStatement, context)).toBe(false);
       expect(matcher.match(secondForStatement, context)).toBe(false);
@@ -135,8 +141,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0]; // The first for loop
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0]; // The first for loop
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(false);
@@ -155,8 +162,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -175,8 +183,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -191,8 +200,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const result = matcher.match(forStatement, context);
       expect(result).toBe(true);
@@ -209,8 +219,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const details = matcher.getMatchDetails(forStatement, context);
       expect(details.complexity).toBe(2);
@@ -228,8 +239,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const details = matcher.getMatchDetails(forStatement, context);
       expect(details.complexity).toBe(3);
@@ -245,8 +257,9 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const forStatement = ast.body[0];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const forStatement = ast.program.body[0];
       
       const details = matcher.getMatchDetails(forStatement, context);
       expect(details.suggestion).toContain('hash maps');
@@ -280,9 +293,10 @@ describe('NestedLoopMatcher', () => {
         }
       `;
       
-      const ast = parse(code, { sourceType: 'module' });
-      const variableDeclaration = ast.body[0];
-      const functionDeclaration = ast.body[1];
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as any;
+      const variableDeclaration = ast.program.body[0];
+      const functionDeclaration = ast.program.body[1];
       
       expect(matcher.match(variableDeclaration, context)).toBe(false);
       expect(matcher.match(functionDeclaration, context)).toBe(false);

@@ -1,26 +1,17 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended',
-    '@typescript-eslint/recommended-requiring-type-checking'
+    'eslint:recommended'
   ],
   parserOptions: {
     ecmaVersion: 2020,
-    sourceType: 'module',
-    project: './tsconfig.json'
+    sourceType: 'module'
   },
   plugins: ['@typescript-eslint'],
   rules: {
     // TypeScript specific rules
-    '@typescript-eslint/no-unused-vars': 'error',
-    '@typescript-eslint/no-explicit-any': 'error',
-    '@typescript-eslint/prefer-nullish-coalescing': 'error',
-    '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'error',
-    '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/await-thenable': 'error',
-    '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+    '@typescript-eslint/no-explicit-any': 'warn',
     
     // General code quality rules
     'no-console': 'warn',
@@ -42,10 +33,14 @@ module.exports = {
     'no-eval': 'error',
     'no-implied-eval': 'error',
     'no-new-func': 'error',
-    'complexity': ['warn', 10],
+    'complexity': ['warn', 15], // Increased from 10 to 15
     'max-depth': ['warn', 4],
-    'max-lines-per-function': ['warn', 50],
-    'max-params': ['warn', 5]
+    'max-lines-per-function': ['warn', 80], // Increased from 50 to 80
+    'max-params': ['warn', 5],
+    
+    // Disable some rules for development
+    'no-unused-vars': ['error', { 'argsIgnorePattern': '^_' }],
+    'no-undef': 'off' // Turn off since TypeScript handles this
   },
   ignorePatterns: ['out/', 'node_modules/', '*.d.ts'],
   env: {

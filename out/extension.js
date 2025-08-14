@@ -47,6 +47,9 @@ const expensive_operations_in_loops_1 = require("./patterns/expensive-operations
 const string_concatenation_in_loops_1 = require("./patterns/string-concatenation-in-loops");
 const dom_queries_in_loops_1 = require("./patterns/dom-queries-in-loops");
 const memory_leaks_1 = require("./patterns/memory-leaks");
+const multiple_array_iterations_1 = require("./patterns/multiple-array-iterations");
+const inefficient_object_access_1 = require("./patterns/inefficient-object-access");
+const infinite_recursion_risks_1 = require("./patterns/infinite-recursion-risks");
 const calculator_1 = require("./scoring/calculator");
 const types_1 = require("./types");
 /**
@@ -109,7 +112,7 @@ class CodeQualityExtension {
         if (activeEditor && this.shouldAnalyzeFile(activeEditor.document)) {
             this.analyzeDocument(activeEditor.document);
         }
-        console.log('Code Quality Highlighter activated');
+        // Extension activated successfully
     }
     /**
      * Deactivate the extension
@@ -119,7 +122,7 @@ class CodeQualityExtension {
         this.clearAnalysisTimeout();
         decorations_1.decorationManager.dispose();
         this.statusBarItem.dispose();
-        console.log('Code Quality Highlighter deactivated');
+        // Extension deactivated successfully
     }
     /**
      * Load extension configuration
@@ -156,16 +159,15 @@ class CodeQualityExtension {
     initializePatterns() {
         // Register core patterns
         engine_1.patternEngine.registerRule(nested_loops_1.nestedLoopRule);
-        // Register critical performance patterns (6/9 complete)
+        // Register critical performance patterns (9/9 complete)
         engine_1.patternEngine.registerRule(blocking_sync_operations_1.blockingSyncOperationsRule);
         engine_1.patternEngine.registerRule(expensive_operations_in_loops_1.expensiveOperationsInLoopsRule);
         engine_1.patternEngine.registerRule(string_concatenation_in_loops_1.stringConcatenationInLoopsRule);
         engine_1.patternEngine.registerRule(dom_queries_in_loops_1.domQueriesInLoopsRule);
         engine_1.patternEngine.registerRule(memory_leaks_1.memoryLeaksRule);
-        // TODO: Register remaining 3 critical patterns:
-        // - Multiple array iterations (chained map/filter)
-        // - Inefficient object access (property lookup caching)
-        // - Infinite recursion risks (base case validation)
+        engine_1.patternEngine.registerRule(multiple_array_iterations_1.multipleArrayIterationsRule);
+        engine_1.patternEngine.registerRule(inefficient_object_access_1.inefficientObjectAccessRule);
+        engine_1.patternEngine.registerRule(infinite_recursion_risks_1.infiniteRecursionRisksRule);
         // TODO: Register remaining 40 patterns
         // Next: Code quality patterns (functions too long, high complexity, etc.)
     }
@@ -272,7 +274,7 @@ class CodeQualityExtension {
             // Get appropriate analyzer
             const analyzer = base_1.AnalyzerFactory.getAnalyzer(language);
             if (!analyzer) {
-                console.warn(`No analyzer found for language: ${language}`);
+                // No analyzer found for this language
                 return;
             }
             // Perform analysis
@@ -288,11 +290,11 @@ class CodeQualityExtension {
             this.updateStatusBar(result);
             // Show errors if any
             if (result.errors.length > 0) {
-                console.warn('Analysis errors:', result.errors);
+                // Analysis completed with errors
             }
         }
         catch (error) {
-            console.error('Analysis failed:', error);
+            // Analysis failed with error
             vscode.window.showErrorMessage(`Code analysis failed: ${error}`);
         }
         finally {

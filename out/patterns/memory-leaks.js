@@ -15,7 +15,7 @@ class MemoryLeaksMatcher {
                 'addEventListener', 'on', 'bind', 'subscribe', 'watch'
             ]
         });
-        Object.defineProperty(this, "_cleanupMethods", {
+        Object.defineProperty(this, "cleanupMethods", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -31,7 +31,7 @@ class MemoryLeaksMatcher {
                 'setTimeout', 'setInterval', 'requestAnimationFrame', 'requestIdleCallback'
             ]
         });
-        Object.defineProperty(this, "_cleanupTimerMethods", {
+        Object.defineProperty(this, "cleanupTimerMethods", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -134,15 +134,17 @@ class MemoryLeaksMatcher {
         return patterns.some(pattern => codeBeforeNode.includes(pattern));
     }
     hasCorrespondingCleanup(eventMethod, context) {
-        const cleanupMap = {
-            'addEventListener': 'removeEventListener',
-            'on': 'off',
-            'bind': 'unbind',
-            'subscribe': 'unsubscribe',
-            'watch': 'unwatch'
-        };
-        const cleanupMethod = cleanupMap[eventMethod];
-        return cleanupMethod ? context.sourceCode.includes(cleanupMethod) : false;
+        const cleanupMethodName = this.cleanupMethods.find(method => {
+            const eventToCleanupMap = {
+                'addEventListener': 'removeEventListener',
+                'on': 'off',
+                'bind': 'unbind',
+                'subscribe': 'unsubscribe',
+                'watch': 'unwatch'
+            };
+            return method === eventToCleanupMap[eventMethod];
+        });
+        return cleanupMethodName ? context.sourceCode.includes(cleanupMethodName) : false;
     }
     isTimerResultStored(node) {
         // Check if timer is assigned to a variable (for later cleanup)
@@ -151,14 +153,16 @@ class MemoryLeaksMatcher {
             parent?.type === 'AssignmentExpression';
     }
     hasCorrespondingTimerCleanup(timerMethod, context) {
-        const cleanupMap = {
-            'setTimeout': 'clearTimeout',
-            'setInterval': 'clearInterval',
-            'requestAnimationFrame': 'cancelAnimationFrame',
-            'requestIdleCallback': 'cancelIdleCallback'
-        };
-        const cleanupMethod = cleanupMap[timerMethod];
-        return cleanupMethod ? context.sourceCode.includes(cleanupMethod) : false;
+        const cleanupMethodName = this.cleanupTimerMethods.find(method => {
+            const timerToCleanupMap = {
+                'setTimeout': 'clearTimeout',
+                'setInterval': 'clearInterval',
+                'requestAnimationFrame': 'cancelAnimationFrame',
+                'requestIdleCallback': 'cancelIdleCallback'
+            };
+            return method === timerToCleanupMap[timerMethod];
+        });
+        return cleanupMethodName ? context.sourceCode.includes(cleanupMethodName) : false;
     }
     isDOMQuery(node) {
         if (!node || node.type !== 'CallExpression')

@@ -56,19 +56,23 @@ export class DecorationManager {
         backgroundColor: config.backgroundColor,
         border: `${config.borderStyle} ${config.borderColor}`,
         borderRadius: config.borderRadius,
-        overviewRulerColor: config.overviewRulerColor,
-        overviewRulerLane: vscode.OverviewRulerLane.Right,
+        ...(config.overviewRulerColor && {
+          overviewRulerColor: config.overviewRulerColor,
+          overviewRulerLane: vscode.OverviewRulerLane.Right
+        }),
         isWholeLine: false,
         rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-        
+
         // Add gutter icon for critical issues
         ...(severity === 'critical' && {
-          gutterIconPath: new vscode.ThemeIcon('error', new vscode.ThemeColor('errorForeground')),
+          gutterIconPath: vscode.Uri.parse('data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff0000" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>').toString('base64')),
           gutterIconSize: 'auto'
         }),
 
         // Add hover message styling
-        textDecoration: severity === 'critical' ? 'underline wavy #ff0000' : undefined,
+        ...(severity === 'critical' && {
+          textDecoration: 'underline wavy #ff0000'
+        }),
 
         // Light theme overrides
         light: {
@@ -103,7 +107,7 @@ export class DecorationManager {
     this.decorationTypes.forEach((decorationType, severity) => {
       const severityMatches = matchesBySeverity.get(severity) || [];
       const decorationOptions = this.createDecorationOptions(severityMatches, editor);
-      
+
       editor.setDecorations(decorationType, decorationOptions);
     });
   }
@@ -127,7 +131,7 @@ export class DecorationManager {
    */
   public clearAllDecorations(): void {
     this.activeDecorations.clear();
-    
+
     vscode.window.visibleTextEditors.forEach(editor => {
       this.decorationTypes.forEach(decorationType => {
         editor.setDecorations(decorationType, []);
@@ -138,7 +142,8 @@ export class DecorationManager {
   /**
    * Get active decorations for a file
    */
-  public getActiveDecorations(filePath: string): PatternMatch[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public getActiveDecorations(filePath: string): any[] {
     return this.activeDecorations.get(filePath) || [];
   }
 
@@ -150,7 +155,7 @@ export class DecorationManager {
     this.decorationTypes.forEach(decorationType => {
       decorationType.dispose();
     });
-    
+
     this.decorationTypes.clear();
     this.initializeDecorationTypes();
 
@@ -169,7 +174,7 @@ export class DecorationManager {
    */
   private groupMatchesBySeverity(matches: PatternMatch[]): Map<Severity, PatternMatch[]> {
     const grouped = new Map<Severity, PatternMatch[]>();
-    
+
     matches.forEach(match => {
       const existing = grouped.get(match.severity) || [];
       existing.push(match);
@@ -183,7 +188,7 @@ export class DecorationManager {
    * Create decoration options from pattern matches
    */
   private createDecorationOptions(
-    matches: PatternMatch[], 
+    matches: PatternMatch[],
     editor: vscode.TextEditor
   ): vscode.DecorationOptions[] {
     return matches.map(match => {
@@ -239,11 +244,11 @@ export class DecorationManager {
 
     const severityIcon = this.getSeverityIcon(match.severity);
     const severityLabel = this.getSeverityLabel(match.severity);
-    
+
     message.appendMarkdown(`### ${severityIcon} ${severityLabel}\n\n`);
     message.appendMarkdown(`**Rule:** ${match.ruleId}\n\n`);
     message.appendMarkdown(`**Category:** ${match.category}\n\n`);
-    message.appendMarkdown(`Click for detailed analysis and solutions...`);
+    message.appendMarkdown('Click for detailed analysis and solutions...');
 
     return message;
   }
@@ -294,7 +299,7 @@ export class DecorationManager {
     // For light theme, use slightly less opacity
     // For dark theme, use slightly more opacity
     const opacityMultiplier = theme === 'light' ? 0.8 : 1.2;
-    
+
     // Extract rgba values and adjust alpha
     const match = backgroundColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
     if (match) {
@@ -302,7 +307,7 @@ export class DecorationManager {
       const newAlpha = Math.min(1, parseFloat(a || '0') * opacityMultiplier);
       return `rgba(${r}, ${g}, ${b}, ${newAlpha})`;
     }
-    
+
     return backgroundColor;
   }
 

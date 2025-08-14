@@ -97,17 +97,21 @@ class DecorationManager {
                 backgroundColor: config.backgroundColor,
                 border: `${config.borderStyle} ${config.borderColor}`,
                 borderRadius: config.borderRadius,
-                overviewRulerColor: config.overviewRulerColor,
-                overviewRulerLane: vscode.OverviewRulerLane.Right,
+                ...(config.overviewRulerColor && {
+                    overviewRulerColor: config.overviewRulerColor,
+                    overviewRulerLane: vscode.OverviewRulerLane.Right
+                }),
                 isWholeLine: false,
                 rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
                 // Add gutter icon for critical issues
                 ...(severity === 'critical' && {
-                    gutterIconPath: new vscode.ThemeIcon('error', new vscode.ThemeColor('errorForeground')),
+                    gutterIconPath: vscode.Uri.parse('data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#ff0000" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8"/></svg>').toString('base64')),
                     gutterIconSize: 'auto'
                 }),
                 // Add hover message styling
-                textDecoration: severity === 'critical' ? 'underline wavy #ff0000' : undefined,
+                ...(severity === 'critical' && {
+                    textDecoration: 'underline wavy #ff0000'
+                }),
                 // Light theme overrides
                 light: {
                     backgroundColor: this.adjustOpacityForTheme(config.backgroundColor, 'light'),
@@ -165,6 +169,7 @@ class DecorationManager {
     /**
      * Get active decorations for a file
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getActiveDecorations(filePath) {
         return this.activeDecorations.get(filePath) || [];
     }
@@ -249,7 +254,7 @@ class DecorationManager {
         message.appendMarkdown(`### ${severityIcon} ${severityLabel}\n\n`);
         message.appendMarkdown(`**Rule:** ${match.ruleId}\n\n`);
         message.appendMarkdown(`**Category:** ${match.category}\n\n`);
-        message.appendMarkdown(`Click for detailed analysis and solutions...`);
+        message.appendMarkdown('Click for detailed analysis and solutions...');
         return message;
     }
     /**

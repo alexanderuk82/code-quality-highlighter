@@ -16,7 +16,8 @@ class NestedLoopMatcher {
     }
     getMatchDetails(node, _context) {
         const nestedLoops = this.countNestedLoops(node);
-        const _estimatedComplexity = Math.pow(10, nestedLoops); // Rough estimate
+        // Rough estimate of time complexity: O(n^nestedLoops)
+        // const estimatedComplexity = Math.pow(10, nestedLoops);
         return {
             complexity: nestedLoops,
             impact: `O(n^${nestedLoops}) complexity - potential performance bottleneck`,
@@ -24,6 +25,10 @@ class NestedLoopMatcher {
         };
     }
     isLoopStatement(node) {
+        // Handle null/undefined nodes
+        if (!node || !node.type) {
+            return false;
+        }
         return [
             'ForStatement',
             'WhileStatement',

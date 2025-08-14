@@ -7,6 +7,7 @@ exports.TypeScriptAnalyzer = exports.JavaScriptAnalyzer = void 0;
 const parser_1 = require("@babel/parser");
 const traverse_1 = __importDefault(require("@babel/traverse"));
 const base_1 = require("./base");
+const types_1 = require("../types");
 const engine_1 = require("../patterns/engine");
 /**
  * JavaScript/TypeScript analyzer using Babel parser
@@ -34,32 +35,35 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
         try {
             // Determine if this is TypeScript based on syntax
             const isTypeScript = this.containsTypeScriptSyntax(sourceCode);
+            const plugins = [
+                'jsx',
+                'asyncGenerators',
+                'bigInt',
+                'classProperties',
+                'decorators-legacy',
+                'doExpressions',
+                'dynamicImport',
+                'exportDefaultFrom',
+                'exportNamespaceFrom',
+                'functionBind',
+                'functionSent',
+                'importMeta',
+                'nullishCoalescingOperator',
+                'numericSeparator',
+                'objectRestSpread',
+                'optionalCatchBinding',
+                'optionalChaining',
+                'throwExpressions',
+                'topLevelAwait'
+            ];
+            if (isTypeScript) {
+                plugins.push('typescript');
+            }
             const ast = (0, parser_1.parse)(sourceCode, {
                 sourceType: 'module',
                 allowImportExportEverywhere: true,
                 allowReturnOutsideFunction: true,
-                plugins: [
-                    'jsx',
-                    'asyncGenerators',
-                    'bigInt',
-                    'classProperties',
-                    'decorators-legacy',
-                    'doExpressions',
-                    'dynamicImport',
-                    'exportDefaultFrom',
-                    'exportNamespaceFrom',
-                    'functionBind',
-                    'functionSent',
-                    'importMeta',
-                    'nullishCoalescingOperator',
-                    'numericSeparator',
-                    'objectRestSpread',
-                    'optionalCatchBinding',
-                    'optionalChaining',
-                    'throwExpressions',
-                    'topLevelAwait',
-                    ...(isTypeScript ? ['typescript'] : [])
-                ]
+                plugins
             });
             return ast;
         }
@@ -80,7 +84,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
             await this.detectJavaScriptSpecificPatterns(ast, context, matches);
         }
         catch (error) {
-            console.warn('Error in JavaScript pattern detection:', error);
+            // Error in JavaScript pattern detection
         }
         return matches;
     }
@@ -89,6 +93,8 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
      */
     async detectJavaScriptSpecificPatterns(ast, context, matches) {
         // Use Babel traverse for more sophisticated AST traversal
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (0, traverse_1.default)(ast, {
             // Detect blocking synchronous operations
             CallExpression: (path) => {
@@ -127,6 +133,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for blocking synchronous operations
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkBlockingOperations(path, context, matches) {
         const node = path.node;
         if (node.callee && node.callee.type === 'MemberExpression') {
@@ -135,7 +142,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
                 matches.push({
                     ruleId: 'blocking-sync-operations',
                     severity: 'critical',
-                    category: PatternCategory.Performance,
+                    category: types_1.PatternCategory.Performance,
                     range: this.createRangeFromNode(node),
                     node,
                     context
@@ -146,6 +153,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for expensive operations in loops
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkExpensiveOperationsInLoops(path, context, matches) {
         const node = path.node;
         // Check if we're inside a loop
@@ -158,7 +166,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
                     matches.push({
                         ruleId: 'expensive-operations-in-loops',
                         severity: 'critical',
-                        category: PatternCategory.Performance,
+                        category: types_1.PatternCategory.Performance,
                         range: this.createRangeFromNode(node),
                         node,
                         context
@@ -170,13 +178,14 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for eval usage
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkEvalUsage(path, context, matches) {
         const node = path.node;
         if (node.callee && node.callee.name === 'eval') {
             matches.push({
                 ruleId: 'eval-usage',
                 severity: 'critical',
-                category: PatternCategory.Security,
+                category: types_1.PatternCategory.Security,
                 range: this.createRangeFromNode(node),
                 node,
                 context
@@ -186,13 +195,14 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for console usage
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkConsoleUsage(path, context, matches) {
         const node = path.node;
         if (node.object && node.object.name === 'console') {
             matches.push({
                 ruleId: 'console-usage',
                 severity: 'warning',
-                category: PatternCategory.Maintainability,
+                category: types_1.PatternCategory.Maintainability,
                 range: this.createRangeFromNode(node),
                 node,
                 context
@@ -202,6 +212,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for magic numbers
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkMagicNumbers(path, context, matches) {
         const node = path.node;
         const value = node.value;
@@ -216,7 +227,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
         matches.push({
             ruleId: 'magic-numbers',
             severity: 'info',
-            category: PatternCategory.Maintainability,
+            category: types_1.PatternCategory.Maintainability,
             range: this.createRangeFromNode(node),
             node,
             context
@@ -225,6 +236,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check function length
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkFunctionLength(path, context, matches) {
         const node = path.node;
         const body = node.body;
@@ -234,7 +246,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
                 matches.push({
                     ruleId: 'function-too-long',
                     severity: 'warning',
-                    category: PatternCategory.Maintainability,
+                    category: types_1.PatternCategory.Maintainability,
                     range: this.createRangeFromNode(node),
                     node,
                     context
@@ -245,6 +257,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for unused variables
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkUnusedVariables(path, context, matches) {
         const node = path.node;
         const binding = path.scope.getBinding(node.id.name);
@@ -252,7 +265,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
             matches.push({
                 ruleId: 'unused-variables',
                 severity: 'warning',
-                category: PatternCategory.Maintainability,
+                category: types_1.PatternCategory.Maintainability,
                 range: this.createRangeFromNode(node),
                 node,
                 context
@@ -262,13 +275,14 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Check for loose equality (== instead of ===)
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkLooseEquality(path, context, matches) {
         const node = path.node;
         if (node.operator === '==' || node.operator === '!=') {
             matches.push({
                 ruleId: 'loose-equality',
                 severity: 'warning',
-                category: PatternCategory.Maintainability,
+                category: types_1.PatternCategory.Maintainability,
                 range: this.createRangeFromNode(node),
                 node,
                 context
@@ -278,6 +292,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Helper: Check if path is inside a loop
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     isInsideLoop(path) {
         let parent = path.parent;
         while (parent) {
@@ -291,6 +306,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Helper: Check if node is a loop
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     isLoopNode(node) {
         return [
             'ForStatement',
@@ -303,6 +319,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Helper: Check if numeric literal is in meaningful context
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     isInMeaningfulContext(path) {
         const parent = path.parent;
         if (!parent)
@@ -324,6 +341,7 @@ class JavaScriptAnalyzer extends base_1.BaseAnalyzer {
     /**
      * Helper: Count lines in AST node
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     countLines(node) {
         if (!node.loc)
             return 0;
@@ -410,6 +428,7 @@ class TypeScriptAnalyzer extends JavaScriptAnalyzer {
     /**
      * Check for missing type annotations
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkMissingTypeAnnotations(path, context, matches) {
         const node = path.node;
         // Check return type annotation
@@ -417,7 +436,7 @@ class TypeScriptAnalyzer extends JavaScriptAnalyzer {
             matches.push({
                 ruleId: 'missing-return-type',
                 severity: 'info',
-                category: PatternCategory.Maintainability,
+                category: types_1.PatternCategory.Maintainability,
                 range: this.createRangeFromNode(node),
                 node,
                 context
@@ -425,12 +444,13 @@ class TypeScriptAnalyzer extends JavaScriptAnalyzer {
         }
         // Check parameter type annotations
         if (node.params) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             node.params.forEach((param) => {
                 if (!param.typeAnnotation) {
                     matches.push({
                         ruleId: 'missing-parameter-type',
                         severity: 'info',
-                        category: PatternCategory.Maintainability,
+                        category: types_1.PatternCategory.Maintainability,
                         range: this.createRangeFromNode(param),
                         node: param,
                         context
@@ -442,12 +462,13 @@ class TypeScriptAnalyzer extends JavaScriptAnalyzer {
     /**
      * Check for any type usage
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkAnyTypeUsage(path, context, matches) {
         const node = path.node;
         matches.push({
             ruleId: 'any-type-usage',
             severity: 'warning',
-            category: PatternCategory.Maintainability,
+            category: types_1.PatternCategory.Maintainability,
             range: this.createRangeFromNode(node),
             node,
             context
@@ -456,12 +477,13 @@ class TypeScriptAnalyzer extends JavaScriptAnalyzer {
     /**
      * Check for non-null assertions
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     checkNonNullAssertion(path, context, matches) {
         const node = path.node;
         matches.push({
             ruleId: 'non-null-assertion',
             severity: 'warning',
-            category: PatternCategory.Maintainability,
+            category: types_1.PatternCategory.Maintainability,
             range: this.createRangeFromNode(node),
             node,
             context

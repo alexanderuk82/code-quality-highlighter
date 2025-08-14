@@ -1,13 +1,13 @@
-import { PatternRule, PatternMatcher, ASTNode, MatchContext } from '../types';
+import { PatternRule, PatternMatcher, AnyASTNode, MatchContext } from '../types';
 /**
  * Matcher for detecting expensive operations inside loops
  */
 export declare class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
     private readonly expensiveArrayMethods;
     private readonly expensiveDOMMethods;
-    private readonly _expensiveObjectOperations;
-    match(node: ASTNode, context: MatchContext): boolean;
-    getMatchDetails(node: ASTNode, _context: MatchContext): {
+    private readonly expensiveObjectOperations;
+    match(node: AnyASTNode, context: MatchContext): boolean;
+    getMatchDetails(node: AnyASTNode, _context: MatchContext): {
         complexity: number;
         impact: string;
         suggestion: string;

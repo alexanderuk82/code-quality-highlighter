@@ -26,7 +26,7 @@ class ExpensiveOperationsInLoopsMatcher {
                 'insertBefore', 'replaceChild'
             ]
         });
-        Object.defineProperty(this, "_expensiveObjectOperations", {
+        Object.defineProperty(this, "expensiveObjectOperations", {
             enumerable: true,
             configurable: true,
             writable: true,
@@ -86,6 +86,7 @@ class ExpensiveOperationsInLoopsMatcher {
         });
     }
     isExpensiveArrayMethod(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         if (callee?.type === 'MemberExpression') {
             const property = callee.property;
@@ -94,6 +95,7 @@ class ExpensiveOperationsInLoopsMatcher {
         return false;
     }
     isExpensiveDOMOperation(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         // Direct DOM method calls
         if (callee?.type === 'Identifier') {
@@ -101,21 +103,22 @@ class ExpensiveOperationsInLoopsMatcher {
         }
         // document.* or element.* calls
         if (callee?.type === 'MemberExpression') {
-            const _object = callee.object;
+            const object = callee.object;
             const property = callee.property;
-            if ((_object?.name === 'document' || _object?.name === 'element') && property) {
+            if ((object?.name === 'document' || object?.name === 'element') && property) {
                 return this.expensiveDOMMethods.includes(property.name);
             }
         }
         return false;
     }
     isExpensiveObjectOperation(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         if (callee?.type === 'MemberExpression') {
             const object = callee.object;
             const property = callee.property;
             if (object?.name === 'Object' && property) {
-                return ['keys', 'values', 'entries', 'assign'].includes(property.name);
+                return this.expensiveObjectOperations.some(op => op.includes(property.name));
             }
             if (object?.name === 'JSON' && property) {
                 return ['stringify', 'parse'].includes(property.name);
@@ -124,10 +127,10 @@ class ExpensiveOperationsInLoopsMatcher {
         return false;
     }
     isRepeatedFunctionCall(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         // Check for function calls that should be cached
         if (callee?.type === 'MemberExpression') {
-            const object = callee.object;
             const property = callee.property;
             // Common patterns that should be cached
             const shouldBeCached = [
@@ -139,6 +142,7 @@ class ExpensiveOperationsInLoopsMatcher {
         return false;
     }
     getOperationType(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         if (callee?.type === 'MemberExpression') {
             const object = callee.object;
@@ -156,6 +160,7 @@ class ExpensiveOperationsInLoopsMatcher {
         return 'Function';
     }
     getMethodName(node) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callee = node.callee;
         if (callee?.type === 'Identifier') {
             return callee.name;

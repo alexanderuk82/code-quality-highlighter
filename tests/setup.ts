@@ -21,7 +21,7 @@ const mockVSCode = {
   },
   workspace: {
     getConfiguration: jest.fn(() => ({
-      get: jest.fn((key: string, defaultValue?: any) => defaultValue)
+      get: jest.fn((_key: string, defaultValue?: any) => defaultValue)
     })),
     onDidChangeTextDocument: jest.fn(),
     onDidSaveTextDocument: jest.fn(),

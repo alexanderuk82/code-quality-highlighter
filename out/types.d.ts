@@ -17,7 +17,7 @@ export declare enum PatternCategory {
  */
 export type SupportedLanguage = 'javascript' | 'typescript' | 'typescriptreact' | 'javascriptreact' | 'php';
 /**
- * AST node types for pattern matching
+ * Base AST node interface
  */
 export interface ASTNode {
     type: string;
@@ -33,8 +33,17 @@ export interface ASTNode {
             column: number;
         };
     };
+}
+/**
+ * Extended AST node with flexible properties
+ */
+export interface ExtendedASTNode extends ASTNode {
     [key: string]: any;
 }
+/**
+ * Union type for all AST nodes
+ */
+export type AnyASTNode = ASTNode | ExtendedASTNode;
 /**
  * Pattern match result
  */
@@ -43,7 +52,7 @@ export interface PatternMatch {
     severity: Severity;
     category: PatternCategory;
     range: Range;
-    node: ASTNode;
+    node: AnyASTNode;
     context: MatchContext;
 }
 /**
@@ -76,8 +85,8 @@ export interface PatternRule {
  * Pattern matcher interface
  */
 export interface PatternMatcher {
-    match(node: ASTNode, context: MatchContext): boolean;
-    getMatchDetails?(node: ASTNode, context: MatchContext): MatchDetails;
+    match(node: AnyASTNode, context: MatchContext): boolean;
+    getMatchDetails?(node: AnyASTNode, context: MatchContext): MatchDetails;
 }
 /**
  * Additional details for pattern matches

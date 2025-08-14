@@ -1,6 +1,7 @@
 import { DOMQueriesInLoopsMatcher } from '../../../src/patterns/dom-queries-in-loops';
 import { MatchContext, SupportedLanguage } from '../../../src/types';
 import { parse } from '@babel/parser';
+import { File } from '@babel/types';
 
 describe('DOMQueriesInLoopsMatcher', () => {
   let matcher: DOMQueriesInLoopsMatcher;
@@ -27,8 +28,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'querySelector');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'querySelector');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -45,8 +47,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'getElementById');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'getElementById');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -61,8 +64,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'querySelectorAll');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'querySelectorAll');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -79,8 +83,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'appendChild');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'appendChild');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -95,8 +100,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'createElement');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'createElement');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -113,8 +119,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'getBoundingClientRect');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'getBoundingClientRect');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -129,8 +136,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'getComputedStyle');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'getComputedStyle');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -146,8 +154,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'querySelector');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'querySelector');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(false);
@@ -165,8 +174,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'createElement');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'createElement');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(false); // createElement is outside the loop
@@ -182,8 +192,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'querySelector');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'querySelector');
       
       const details = matcher.getMatchDetails(callExpression, context);
       expect(details.complexity).toBe(3);
@@ -199,8 +210,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'getBoundingClientRect');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'getBoundingClientRect');
       
       const details = matcher.getMatchDetails(callExpression, context);
       expect(details.complexity).toBe(4);
@@ -220,8 +232,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'querySelector');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'querySelector');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -236,8 +249,9 @@ describe('DOMQueriesInLoopsMatcher', () => {
       `;
       
       context.sourceCode = code;
-      const ast = parse(code, { sourceType: 'module' });
-      const callExpression = this.findCallExpression(ast, 'createElement');
+      const parseResult = parse(code, { sourceType: 'module' });
+      const ast = parseResult as File;
+      const callExpression = findCallExpression(ast, 'createElement');
       
       const result = matcher.match(callExpression, context);
       expect(result).toBe(true);
@@ -258,36 +272,37 @@ describe('DOMQueriesInLoopsMatcher', () => {
     });
   });
 
-  // Helper method to find call expressions in AST
-  private findCallExpression(ast: any, methodName: string): any {
-    let found: any = null;
-    
-    const traverse = (node: any) => {
-      if (node && typeof node === 'object') {
-        if (node.type === 'CallExpression') {
-          const callee = node.callee;
-          if (callee?.type === 'MemberExpression' && callee.property?.name === methodName) {
-            found = node;
-            return;
-          }
-          if (callee?.type === 'Identifier' && callee.name === methodName) {
-            found = node;
-            return;
-          }
+});
+
+// Helper function to find call expressions in AST
+function findCallExpression(ast: any, methodName: string): any {
+  let found: any = null;
+  
+  const traverse = (node: any) => {
+    if (node && typeof node === 'object') {
+      if (node.type === 'CallExpression') {
+        const callee = node.callee;
+        if (callee?.type === 'MemberExpression' && callee.property?.name === methodName) {
+          found = node;
+          return;
         }
-        
-        for (const key in node) {
-          const value = node[key];
-          if (Array.isArray(value)) {
-            value.forEach(item => traverse(item));
-          } else {
-            traverse(value);
-          }
+        if (callee?.type === 'Identifier' && callee.name === methodName) {
+          found = node;
+          return;
         }
       }
-    };
-    
-    traverse(ast);
-    return found || { type: 'CallExpression', callee: { type: 'MemberExpression', property: { name: methodName } } };
-  }
-});
+      
+      for (const key in node) {
+        const value = node[key];
+        if (Array.isArray(value)) {
+          value.forEach(item => traverse(item));
+        } else {
+          traverse(value);
+        }
+      }
+    }
+  };
+  
+  traverse(ast);
+  return found || { type: 'CallExpression', callee: { type: 'MemberExpression', property: { name: methodName } } };
+}
