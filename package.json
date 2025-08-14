@@ -4,6 +4,10 @@
   "description": "Real-time code quality analysis with visual feedback and educational tooltips - 150+ patterns for JS/TS/React/PHP",
   "version": "0.1.0",
   "publisher": "alexb-studio",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexb-studio/code-quality-highlighter"
+  },
   "engines": {
     "vscode": "^1.74.0"
   },
