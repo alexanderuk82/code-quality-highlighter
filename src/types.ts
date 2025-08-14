@@ -57,6 +57,7 @@ export interface PatternMatch {
   range: Range;
   node: AnyASTNode;
   context: MatchContext;
+  template?: TooltipTemplate;  // Optional template for tooltips
 }
 
 /**

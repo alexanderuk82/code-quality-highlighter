@@ -1,12 +1,29 @@
 import * as vscode from 'vscode';
 import { PatternMatch } from '../types';
 /**
- * Manages text decorations for code quality highlighting
+ * Manages text decorations and hover providers for code quality highlighting
  */
 export declare class DecorationManager {
     private decorationTypes;
     private activeDecorations;
+    private hoverProvider;
     constructor();
+    /**
+     * Register hover provider for showing detailed tooltips
+     */
+    private registerHoverProvider;
+    /**
+     * Provide hover content for a position
+     */
+    private provideHover;
+    /**
+     * Create detailed hover with problem, solution, and code examples
+     */
+    private createDetailedHover;
+    /**
+     * Get score impact for a rule
+     */
+    private getScoreImpact;
     /**
      * Initialize decoration types for each severity level
      */
@@ -26,7 +43,7 @@ export declare class DecorationManager {
     /**
      * Get active decorations for a file
      */
-    getActiveDecorations(filePath: string): any[];
+    getActiveDecorations(filePath: string): PatternMatch[];
     /**
      * Update decorations when configuration changes
      */
@@ -44,17 +61,9 @@ export declare class DecorationManager {
      */
     private convertToVSCodeRange;
     /**
-     * Create hover message for pattern match
-     */
-    private createHoverMessage;
-    /**
      * Get icon for severity level
      */
     private getSeverityIcon;
-    /**
-     * Get label for severity level
-     */
-    private getSeverityLabel;
     /**
      * Get color for severity level
      */
@@ -64,7 +73,7 @@ export declare class DecorationManager {
      */
     private adjustOpacityForTheme;
     /**
-     * Dispose all decoration types
+     * Dispose all decoration types and hover provider
      */
     dispose(): void;
 }

@@ -1,65 +1,64 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.multipleArrayIterationsTemplate = exports.multipleArrayIterationsRule = exports.MultipleArrayIterationsMatcher = void 0;
+exports.multipleArrayIterationsRule = exports.MultipleArrayIterationsMatcher = void 0;
 const types_1 = require("../types");
 /**
- * Detects multiple array iterations that can be optimized into single-pass operations
- *
- * Problematic patterns:
- * - arr.map().filter().reduce() chains
- * - Multiple separate iterations over the same array
- * - Nested array methods creating O(n²) complexity
- *
- * Performance impact: Reduces O(3n) to O(n) complexity
+ * Detects multiple chained array iterations that could be combined
  */
 class MultipleArrayIterationsMatcher {
     constructor() {
-        Object.defineProperty(this, "chainableArrayMethods", {
+        Object.defineProperty(this, "chainableMethods", {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: [
-                'map', 'filter', 'reduce', 'sort', 'reverse', 'slice', 'concat'
-            ]
+            value: ['map', 'filter', 'reduce', 'forEach', 'find', 'some', 'every', 'flatMap']
         });
     }
-    match(node, context) {
-        if (!this.isRelevantNode(node))
-            return false;
-        return this.hasChainedArrayMethods(node) ||
-            this.hasMultipleIterationsOnSameArray(node, context);
-    }
-    getMatchDetails(node, _context) {
-        const chainLength = this.getChainLength(node);
-        const arrayName = this.getArrayName(node);
-        return {
-            complexity: this.calculateComplexity(chainLength),
-            impact: `${chainLength} separate iterations over array '${arrayName}' - O(${chainLength}n) complexity`,
-            suggestion: this.getSuggestion(node, chainLength)
-        };
-    }
-    isRelevantNode(node) {
-        return node.type === 'CallExpression';
-    }
-    hasChainedArrayMethods(node) {
+    match(node, _context) {
         if (node.type !== 'CallExpression')
             return false;
-        const chainLength = this.getChainLength(node);
-        return chainLength >= 2;
+        const callee = node.callee;
+        if (callee?.type !== 'MemberExpression')
+            return false;
+        const property = callee.property;
+        if (!property || property.type !== 'Identifier')
+            return false;
+        // Check if it's an array method
+        if (!this.chainableMethods.includes(property.name))
+            return false;
+        // Check if the object is another array method call
+        const object = callee.object;
+        if (object?.type === 'CallExpression') {
+            const innerCallee = object.callee;
+            if (innerCallee?.type === 'MemberExpression') {
+                const innerProperty = innerCallee.property;
+                if (innerProperty?.type === 'Identifier' &&
+                    this.chainableMethods.includes(innerProperty.name)) {
+                    // Found chained array methods
+                    return true;
+                }
+            }
+        }
+        return false;
     }
-    getChainLength(node) {
+    getMatchDetails(node, _context) {
+        const chainLength = this.countChainLength(node);
+        return {
+            complexity: chainLength,
+            impact: `${chainLength} iterations over the same array`,
+            suggestion: 'Combine operations into a single iteration'
+        };
+    }
+    countChainLength(node) {
+        let count = 0;
         let current = node;
-        let length = 0;
-        while (current && current.type === 'CallExpression') {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        while (current?.type === 'CallExpression') {
             const callee = current.callee;
             if (callee?.type === 'MemberExpression') {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const property = callee.property;
-                const methodName = property?.name;
-                if (this.chainableArrayMethods.includes(methodName)) {
-                    length++;
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if (property?.type === 'Identifier' &&
+                    this.chainableMethods.includes(property.name)) {
+                    count++;
                     current = callee.object;
                 }
                 else {
@@ -70,127 +69,72 @@ class MultipleArrayIterationsMatcher {
                 break;
             }
         }
-        return length;
-    }
-    getArrayName(node) {
-        let current = node;
-        // Traverse up the chain to find the original array
-        while (current && current.type === 'CallExpression') {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const callee = current.callee;
-            if (callee?.type === 'MemberExpression') {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const object = callee.object;
-                if (object?.type === 'Identifier') {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return object.name || 'array';
-                }
-                else if (object?.type === 'CallExpression') {
-                    current = object;
-                }
-                else {
-                    break;
-                }
-            }
-            else {
-                break;
-            }
-        }
-        return 'array';
-    }
-    hasMultipleIterationsOnSameArray(_node, _context) {
-        // This would require more complex analysis of the surrounding scope
-        // For now, focus on chained methods which are easier to detect
-        return false;
-    }
-    calculateComplexity(chainLength) {
-        // Each additional method in the chain multiplies the complexity
-        return Math.min(chainLength * 2, 10); // Cap at 10 for very long chains
-    }
-    getSuggestion(_node, chainLength) {
-        if (chainLength <= 2) {
-            return 'Consider combining operations into a single reduce() call';
-        }
-        else if (chainLength <= 3) {
-            return 'Use a single reduce() or for-loop to avoid multiple iterations';
-        }
-        else {
-            return 'Refactor into a single-pass algorithm using reduce() or traditional loop';
-        }
+        return count;
     }
 }
 exports.MultipleArrayIterationsMatcher = MultipleArrayIterationsMatcher;
-/**
- * Tooltip template for multiple array iterations
- */
 const multipleArrayIterationsTemplate = {
-    title: '🔴 PERFORMANCE CRITICAL: Multiple Array Iterations',
-    problemDescription: 'Chained array methods create multiple iterations over the same data, causing O(n×methods) complexity instead of O(n).',
-    impactDescription: 'Each additional method in the chain multiplies processing time. For large arrays, this can cause significant performance degradation.',
-    solutionDescription: 'Combine operations into a single pass using reduce() or a traditional for-loop.',
+    title: '🔴 PERFORMANCE: Multiple Array Iterations Detected',
+    problemDescription: 'Each array method creates a new iteration over the entire array. Chaining multiple methods results in unnecessary passes through the data.',
+    impactDescription: 'With 1,000 items and 3 chained methods, you iterate 3,000 times instead of 1,000.',
+    solutionDescription: 'Combine operations into a single iteration using reduce() or a single loop with multiple operations.',
     codeExamples: [
         {
-            title: 'Problematic: Multiple Iterations',
-            before: `// O(3n) - Three separate iterations
+            title: 'Combine filter + map',
+            before: `// 2 iterations - inefficient
 const result = users
-  .map(user => ({ ...user, age: user.age + 1 }))
-  .filter(user => user.active)
-  .reduce((sum, user) => sum + user.score, 0);`,
-            after: `// O(n) - Single iteration
-const result = users.reduce((sum, user) => {
-  if (user.active) {
-    return sum + user.score + 1; // age increment applied inline
+  .filter(user => user.age > 18)
+  .map(user => user.name);`,
+            after: `// 1 iteration - efficient
+const result = users.reduce((acc, user) => {
+  if (user.age > 18) {
+    acc.push(user.name);
+  }
+  return acc;
+}, []);
+
+// Or with flatMap
+const result = users.flatMap(user => 
+  user.age > 18 ? [user.name] : []
+);`,
+            improvement: '50% fewer iterations'
+        },
+        {
+            title: 'Combine filter + map + reduce',
+            before: `// 3 iterations
+const total = orders
+  .filter(order => order.status === 'completed')
+  .map(order => order.amount)
+  .reduce((sum, amount) => sum + amount, 0);`,
+            after: `// 1 iteration
+const total = orders.reduce((sum, order) => {
+  if (order.status === 'completed') {
+    return sum + order.amount;
   }
   return sum;
 }, 0);`,
-            improvement: '3x faster for large arrays'
-        },
-        {
-            title: 'Alternative: For-loop optimization',
-            before: `// Multiple iterations
-const processed = data
-  .filter(item => item.valid)
-  .map(item => item.value * 2)
-  .sort((a, b) => a - b);`,
-            after: `// Single pass + sort
-const processed = [];
-for (const item of data) {
-  if (item.valid) {
-    processed.push(item.value * 2);
-  }
-}
-processed.sort((a, b) => a - b);`,
-            improvement: '2x faster, more readable'
+            improvement: '66% fewer iterations'
         }
     ],
     actions: [
         {
-            label: 'Copy optimized reduce()',
+            label: 'Copy Optimized Solution',
             type: 'copy',
-            payload: 'array.reduce((acc, item) => { /* combined logic */ }, initialValue)'
-        },
-        {
-            label: 'Copy for-loop pattern',
-            type: 'copy',
-            payload: 'const result = []; for (const item of array) { /* combined logic */ }'
+            payload: 'optimized-code'
         }
     ],
     learnMoreUrl: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/reduce'
 };
-exports.multipleArrayIterationsTemplate = multipleArrayIterationsTemplate;
-/**
- * Multiple array iterations pattern rule
- */
 exports.multipleArrayIterationsRule = {
     id: 'multiple-array-iterations',
     name: 'Multiple Array Iterations',
-    description: 'Detects chained array methods that create multiple iterations over the same data',
+    description: 'Detects chained array methods that iterate multiple times',
     category: types_1.PatternCategory.Performance,
-    severity: 'critical',
-    languages: ['javascript', 'typescript', 'typescriptreact', 'javascriptreact'],
+    severity: 'warning',
+    languages: ['javascript', 'typescript', 'javascriptreact', 'typescriptreact'],
     enabled: true,
     matcher: new MultipleArrayIterationsMatcher(),
     template: multipleArrayIterationsTemplate,
-    scoreImpact: -15
+    scoreImpact: -8
 };
 //# sourceMappingURL=multiple-array-iterations.js.map

@@ -107,7 +107,8 @@ export class PatternEngine {
               ...context,
               lineNumber: node.loc?.start.line || 1,
               columnNumber: node.loc?.start.column || 1
-            }
+            },
+            template: rule.template  // Add template here
           };
           matches.push(match);
         }

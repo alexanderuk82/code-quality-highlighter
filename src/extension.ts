@@ -9,9 +9,14 @@ import { expensiveOperationsInLoopsRule } from './patterns/expensive-operations-
 import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
 import { domQueriesInLoopsRule } from './patterns/dom-queries-in-loops';
 import { memoryLeaksRule } from './patterns/memory-leaks';
-// import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
-// import { inefficientObjectAccessRule } from './patterns/inefficient-object-access';
-// import { infiniteRecursionRisksRule } from './patterns/infinite-recursion-risks';
+import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
+import { inlineFunctionPropsRule } from './patterns/inline-function-props';
+import { missingReactMemoRule } from './patterns/missing-react-memo';
+import { missingDependenciesRule } from './patterns/missing-dependencies';
+import { directStateMutationRule } from './patterns/direct-state-mutation';
+import { functionTooLongRule } from './patterns/function-too-long';
+import { missingKeysInListsRule } from './patterns/missing-keys-in-lists';
+import { modernJavaScriptRule } from './patterns/modern-javascript';
 import { scoreCalculator } from './scoring/calculator';
 import {
   AnalysisResult,
@@ -112,21 +117,28 @@ export class CodeQualityExtension {
    * Initialize pattern rules
    */
   private initializePatterns(): void {
-    // Register core patterns
+    // Core JavaScript patterns
     patternEngine.registerRule(nestedLoopRule);
-
-    // Register critical performance patterns (9/9 complete)
     patternEngine.registerRule(blockingSyncOperationsRule);
     patternEngine.registerRule(expensiveOperationsInLoopsRule);
     patternEngine.registerRule(stringConcatenationInLoopsRule);
     patternEngine.registerRule(domQueriesInLoopsRule);
     patternEngine.registerRule(memoryLeaksRule);
-    // patternEngine.registerRule(multipleArrayIterationsRule);
-    // patternEngine.registerRule(inefficientObjectAccessRule);
-    // patternEngine.registerRule(infiniteRecursionRisksRule);
+    patternEngine.registerRule(multipleArrayIterationsRule);
+    patternEngine.registerRule(functionTooLongRule);
+    
+    // React-specific patterns
+    patternEngine.registerRule(inlineFunctionPropsRule);
+    patternEngine.registerRule(missingReactMemoRule);
+    patternEngine.registerRule(missingDependenciesRule);
+    patternEngine.registerRule(directStateMutationRule);
+    patternEngine.registerRule(missingKeysInListsRule);
+    
+    // Good practices (green highlighting)
+    patternEngine.registerRule(modernJavaScriptRule);
 
-    // TODO: Register remaining 40 patterns
-    // Next: Code quality patterns (functions too long, high complexity, etc.)
+    // Total: 14 patterns active (13 issues + 1 good practice)
+    console.log('[Code Quality] Registered patterns:', patternEngine.getStatistics());
   }
 
   /**
@@ -182,6 +194,66 @@ export class CodeQualityExtension {
     this.context.subscriptions.push(
       vscode.commands.registerCommand('codeQuality.configureRules', () => {
         this.openConfiguration();
+      })
+    );
+
+    // Copy solution command
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand('codeQuality.copySolution', (...args: any[]) => {
+        try {
+          console.log('[Code Quality] Copy command args:', args);
+          // The code comes as the first argument
+          const code = args[0];
+          if (code) {
+            vscode.env.clipboard.writeText(code);
+            vscode.window.showInformationMessage('✅ Solution copied to clipboard!');
+          } else {
+            vscode.window.showErrorMessage('No code to copy');
+          }
+        } catch (error) {
+          console.error('[Code Quality] Copy error:', error);
+          vscode.window.showErrorMessage('Failed to copy solution');
+        }
+      })
+    );
+
+    // Replace code command
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand('codeQuality.replaceCode', (...args: any[]) => {
+        try {
+          console.log('[Code Quality] Replace command args:', args);
+          // The data comes as a JSON string in the first argument
+          const dataString = args[0];
+          if (!dataString) {
+            vscode.window.showErrorMessage('No data for replacement');
+            return;
+          }
+          
+          const data = JSON.parse(dataString);
+          const activeEditor = vscode.window.activeTextEditor;
+          
+          if (activeEditor) {
+            const range = new vscode.Range(
+              new vscode.Position(data.range.start.line, data.range.start.character),
+              new vscode.Position(data.range.end.line, data.range.end.character)
+            );
+            
+            activeEditor.edit(editBuilder => {
+              editBuilder.replace(range, data.newCode);
+            }).then(success => {
+              if (success) {
+                vscode.window.showInformationMessage('✅ Code replaced with optimized solution!');
+              } else {
+                vscode.window.showErrorMessage('Failed to apply replacement');
+              }
+            });
+          } else {
+            vscode.window.showErrorMessage('No active editor');
+          }
+        } catch (error) {
+          console.error('[Code Quality] Replace error:', error);
+          vscode.window.showErrorMessage(`Failed to replace code: ${error}`);
+        }
       })
     );
   }

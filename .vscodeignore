@@ -8,7 +8,6 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
-node_modules/**
 tests/**
 scripts/**
 *.md
@@ -20,3 +19,7 @@ quick-test.js
 run-single-test.js
 check-lint.js
 debug-test.js
+debug-extension.js
+simple-test.js
+extension-simple.ts
+extension-backup.ts
