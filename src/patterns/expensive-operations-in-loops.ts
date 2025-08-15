@@ -170,7 +170,7 @@ export class ExpensiveOperationsInLoopsMatcher implements PatternMatcher {
       if (this.expensiveArrayMethods.includes(property?.name)) {
         return 'Array';
       }
-
+      
       if (object?.name === 'Object' || object?.name === 'JSON') {
         return 'Object';
       }
