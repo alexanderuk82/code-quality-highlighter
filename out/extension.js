@@ -55,6 +55,10 @@ const direct_state_mutation_1 = require("./patterns/direct-state-mutation");
 const function_too_long_1 = require("./patterns/function-too-long");
 const missing_keys_in_lists_1 = require("./patterns/missing-keys-in-lists");
 const modern_javascript_1 = require("./patterns/modern-javascript");
+const synchronous_xhr_1 = require("./patterns/synchronous-xhr");
+const repeated_regex_compilation_1 = require("./patterns/repeated-regex-compilation");
+const objects_in_render_1 = require("./patterns/objects-in-render");
+const index_as_key_1 = require("./patterns/index-as-key");
 const calculator_1 = require("./scoring/calculator");
 const types_1 = require("./types");
 /**
@@ -171,15 +175,19 @@ class CodeQualityExtension {
         engine_1.patternEngine.registerRule(memory_leaks_1.memoryLeaksRule);
         engine_1.patternEngine.registerRule(multiple_array_iterations_1.multipleArrayIterationsRule);
         engine_1.patternEngine.registerRule(function_too_long_1.functionTooLongRule);
+        engine_1.patternEngine.registerRule(synchronous_xhr_1.synchronousXhrRule);
+        engine_1.patternEngine.registerRule(repeated_regex_compilation_1.repeatedRegexCompilationRule);
         // React-specific patterns
         engine_1.patternEngine.registerRule(inline_function_props_1.inlineFunctionPropsRule);
         engine_1.patternEngine.registerRule(missing_react_memo_1.missingReactMemoRule);
         engine_1.patternEngine.registerRule(missing_dependencies_1.missingDependenciesRule);
         engine_1.patternEngine.registerRule(direct_state_mutation_1.directStateMutationRule);
         engine_1.patternEngine.registerRule(missing_keys_in_lists_1.missingKeysInListsRule);
+        engine_1.patternEngine.registerRule(objects_in_render_1.objectsInRenderRule);
+        engine_1.patternEngine.registerRule(index_as_key_1.indexAsKeyRule);
         // Good practices (green highlighting)
         engine_1.patternEngine.registerRule(modern_javascript_1.modernJavaScriptRule);
-        // Total: 14 patterns active (13 issues + 1 good practice)
+        // Total: updated count will be reflected in statistics
         console.log('[Code Quality] Registered patterns:', engine_1.patternEngine.getStatistics());
     }
     /**

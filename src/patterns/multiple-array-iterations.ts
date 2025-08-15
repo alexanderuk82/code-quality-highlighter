@@ -11,55 +11,56 @@ import {
  * Detects multiple chained array iterations that could be combined
  */
 export class MultipleArrayIterationsMatcher implements PatternMatcher {
-  private readonly chainableMethods = ['map', 'filter', 'reduce', 'forEach', 'find', 'some', 'every', 'flatMap'];
-  
+  private readonly chainableMethods = ['map', 'filter', 'reduce', 'forEach', 'find', 'some', 'every', 'flatMap', 'sort', 'slice', 'reverse'];
+
   public match(node: ASTNode, _context: MatchContext): boolean {
     if (node.type !== 'CallExpression') return false;
-    
+
     const callee = (node as any).callee;
     if (callee?.type !== 'MemberExpression') return false;
-    
+
     const property = callee.property;
     if (!property || property.type !== 'Identifier') return false;
-    
+
     // Check if it's an array method
     if (!this.chainableMethods.includes(property.name)) return false;
-    
+
     // Check if the object is another array method call
     const object = callee.object;
     if (object?.type === 'CallExpression') {
       const innerCallee = object.callee;
       if (innerCallee?.type === 'MemberExpression') {
         const innerProperty = innerCallee.property;
-        if (innerProperty?.type === 'Identifier' && 
+        if (innerProperty?.type === 'Identifier' &&
             this.chainableMethods.includes(innerProperty.name)) {
           // Found chained array methods
           return true;
         }
       }
     }
-    
+
     return false;
   }
-  
+
   public getMatchDetails(node: ASTNode, _context: MatchContext) {
     const chainLength = this.countChainLength(node);
+    const baseName = this.getBaseArrayName(node);
     return {
-      complexity: chainLength,
-      impact: `${chainLength} iterations over the same array`,
-      suggestion: 'Combine operations into a single iteration'
+      complexity: Math.max(3, chainLength + 2),
+      impact: `${chainLength} separate iterations over '${baseName || 'the same array'}'`,
+      suggestion: 'Combine operations into a single iteration (e.g., using reduce())'
     };
   }
-  
+
   private countChainLength(node: ASTNode): number {
     let count = 0;
     let current = node;
-    
+
     while (current?.type === 'CallExpression') {
       const callee = (current as any).callee;
       if (callee?.type === 'MemberExpression') {
         const property = callee.property;
-        if (property?.type === 'Identifier' && 
+        if (property?.type === 'Identifier' &&
             this.chainableMethods.includes(property.name)) {
           count++;
           current = callee.object;
@@ -70,8 +71,43 @@ export class MultipleArrayIterationsMatcher implements PatternMatcher {
         break;
       }
     }
-    
+
     return count;
+  }
+
+  private getBaseArrayName(node: ASTNode): string | null {
+    // Walk down the chain to find the root object name, e.g., users in users.filter(...).map(...)
+    let current: any = node;
+    while (current && current.type === 'CallExpression') {
+      const callee = current.callee;
+      if (callee?.type !== 'MemberExpression') break;
+      current = callee.object;
+    }
+
+    if (!current) return null;
+
+    if (current.type === 'Identifier') {
+      return current.name || null;
+    }
+    if (current.type === 'MemberExpression') {
+      // Try to build a dotted name if simple, e.g., this.users
+      const parts: string[] = [];
+      let obj: any = current;
+      while (obj && obj.type === 'MemberExpression') {
+        if (obj.property?.type === 'Identifier') {
+          parts.unshift(obj.property.name);
+        } else {
+          break;
+        }
+        if (obj.object?.type === 'Identifier') {
+          parts.unshift(obj.object.name);
+          break;
+        }
+        obj = obj.object;
+      }
+      return parts.length ? parts.join('.') : null;
+    }
+    return null;
   }
 }
 

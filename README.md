@@ -264,6 +264,10 @@ npm run test:coverage
 npm run test:watch
 ```
 
+### Manual QA: All-in-one pattern showcase
+
+For quick visual verification inside VS Code, open `test-all-patterns-full.jsx`. It intentionally triggers most JS and React patterns so you can see highlights, hovers, and the score update in one place.
+
 ### Building and Packaging
 
 ```bash

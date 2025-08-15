@@ -17,6 +17,10 @@ import { directStateMutationRule } from './patterns/direct-state-mutation';
 import { functionTooLongRule } from './patterns/function-too-long';
 import { missingKeysInListsRule } from './patterns/missing-keys-in-lists';
 import { modernJavaScriptRule } from './patterns/modern-javascript';
+import { synchronousXhrRule } from './patterns/synchronous-xhr';
+import { repeatedRegexCompilationRule } from './patterns/repeated-regex-compilation';
+import { objectsInRenderRule } from './patterns/objects-in-render';
+import { indexAsKeyRule } from './patterns/index-as-key';
 import { scoreCalculator } from './scoring/calculator';
 import {
   AnalysisResult,
@@ -126,18 +130,22 @@ export class CodeQualityExtension {
     patternEngine.registerRule(memoryLeaksRule);
     patternEngine.registerRule(multipleArrayIterationsRule);
     patternEngine.registerRule(functionTooLongRule);
-    
+  patternEngine.registerRule(synchronousXhrRule);
+  patternEngine.registerRule(repeatedRegexCompilationRule);
+
     // React-specific patterns
     patternEngine.registerRule(inlineFunctionPropsRule);
     patternEngine.registerRule(missingReactMemoRule);
     patternEngine.registerRule(missingDependenciesRule);
     patternEngine.registerRule(directStateMutationRule);
     patternEngine.registerRule(missingKeysInListsRule);
-    
+  patternEngine.registerRule(objectsInRenderRule);
+  patternEngine.registerRule(indexAsKeyRule);
+
     // Good practices (green highlighting)
     patternEngine.registerRule(modernJavaScriptRule);
 
-    // Total: 14 patterns active (13 issues + 1 good practice)
+  // Total: updated count will be reflected in statistics
     console.log('[Code Quality] Registered patterns:', patternEngine.getStatistics());
   }
 
@@ -228,16 +236,16 @@ export class CodeQualityExtension {
             vscode.window.showErrorMessage('No data for replacement');
             return;
           }
-          
+
           const data = JSON.parse(dataString);
           const activeEditor = vscode.window.activeTextEditor;
-          
+
           if (activeEditor) {
             const range = new vscode.Range(
               new vscode.Position(data.range.start.line, data.range.start.character),
               new vscode.Position(data.range.end.line, data.range.end.character)
             );
-            
+
             activeEditor.edit(editBuilder => {
               editBuilder.replace(range, data.newCode);
             }).then(success => {

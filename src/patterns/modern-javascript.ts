@@ -19,7 +19,7 @@ export class ModernJavaScriptMatcher implements PatternMatcher {
         return true; // Good practice!
       }
     }
-    
+
     // Detect arrow functions (modern)
     if (node.type === 'ArrowFunctionExpression') {
       const body = (node as any).body;
@@ -28,25 +28,25 @@ export class ModernJavaScriptMatcher implements PatternMatcher {
         return true;
       }
     }
-    
+
     // Detect template literals (modern string handling)
     if (node.type === 'TemplateLiteral') {
       return true;
     }
-    
+
     // Detect destructuring (modern syntax)
     if (node.type === 'ObjectPattern' || node.type === 'ArrayPattern') {
       return true;
     }
-    
+
     // Detect spread operator
     if (node.type === 'SpreadElement') {
       return true;
     }
-    
+
     return false;
   }
-  
+
   private isTooComplex(node: ASTNode): boolean {
     // Check if arrow function body is too complex
     if (node.type === 'BlockStatement') {
@@ -55,10 +55,10 @@ export class ModernJavaScriptMatcher implements PatternMatcher {
     }
     return false;
   }
-  
+
   public getMatchDetails(node: ASTNode, _context: MatchContext) {
     let practiceType = 'Modern JavaScript';
-    
+
     if (node.type === 'VariableDeclaration') {
       const kind = (node as any).kind;
       practiceType = `Using ${kind} (block-scoped)`;
@@ -71,7 +71,7 @@ export class ModernJavaScriptMatcher implements PatternMatcher {
     } else if (node.type === 'SpreadElement') {
       practiceType = 'Spread operator (immutable operations)';
     }
-    
+
     return {
       impact: practiceType,
       suggestion: 'Keep using modern JavaScript features!'

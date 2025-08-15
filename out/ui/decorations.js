@@ -119,7 +119,7 @@ class DecorationManager {
                     snippet = snippet.slice(0, 600) + '\n...';
                 }
                 if (snippet.length > 0) {
-                    markdown.appendMarkdown(`### This code\n`);
+                    markdown.appendMarkdown('### This code\n');
                     markdown.appendCodeblock(snippet, 'javascript');
                 }
             }
@@ -131,19 +131,19 @@ class DecorationManager {
         // Adjust content based on severity
         if (match.severity === 'good') {
             // GREEN - Only positive feedback
-            markdown.appendMarkdown(`### ✅ Excellent!\n`);
+            markdown.appendMarkdown('### ✅ Excellent!\n');
             markdown.appendMarkdown(`You're following best practices! ${template.solutionDescription}\n\n`);
             if (template.impactDescription) {
                 markdown.appendMarkdown(`**Benefits:** ${template.impactDescription}\n\n`);
             }
             // Show examples of what you're doing right
             if (template.codeExamples && template.codeExamples.length > 0) {
-                markdown.appendMarkdown(`### 📚 Why This Is Good:\n\n`);
+                markdown.appendMarkdown('### 📚 Why This Is Good:\n\n');
                 template.codeExamples.forEach(example => {
                     if (example.title) {
                         markdown.appendMarkdown(`**${example.title}**\n\n`);
                     }
-                    markdown.appendMarkdown(`You're using:\n`);
+                    markdown.appendMarkdown('You\'re using:\n');
                     markdown.appendCodeblock(example.after, 'javascript');
                     if (example.improvement) {
                         markdown.appendMarkdown(`**Benefit:** ${example.improvement}\n\n`);
@@ -153,31 +153,31 @@ class DecorationManager {
         }
         else if (match.severity === 'info') {
             // YELLOW - Score impact and gentle suggestion
-            markdown.appendMarkdown(`### 📊 Score Impact\n`);
+            markdown.appendMarkdown('### 📊 Score Impact\n');
             const scoreImpact = this.getScoreImpact(match.ruleId);
             markdown.appendMarkdown(`This affects your score by **${scoreImpact} points**.\n\n`);
             if (template.problemDescription) {
                 markdown.appendMarkdown(`**Note:** ${template.problemDescription}\n\n`);
             }
-            markdown.appendMarkdown(`### 💡 Suggestion\n`);
+            markdown.appendMarkdown('### 💡 Suggestion\n');
             markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
             // Simple example
             if (template.codeExamples && template.codeExamples.length > 0) {
                 const example = template.codeExamples[0];
                 if (example) {
-                    markdown.appendMarkdown(`**Consider this approach:**\n`);
+                    markdown.appendMarkdown('**Consider this approach:**\n');
                     markdown.appendCodeblock(example.after, 'javascript');
                 }
             }
         }
         else if (match.severity === 'warning') {
             // ORANGE - Warning with explanation
-            markdown.appendMarkdown(`### ⚠️ Warning\n`);
+            markdown.appendMarkdown('### ⚠️ Warning\n');
             markdown.appendMarkdown(`${template.problemDescription}\n\n`);
             if (template.impactDescription) {
                 markdown.appendMarkdown(`**Why it matters:** ${template.impactDescription}\n\n`);
             }
-            markdown.appendMarkdown(`### 🔧 How to Fix\n`);
+            markdown.appendMarkdown('### 🔧 How to Fix\n');
             markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
             // Show before/after
             if (template.codeExamples && template.codeExamples.length > 0) {
@@ -185,9 +185,9 @@ class DecorationManager {
                     if (example.title) {
                         markdown.appendMarkdown(`**${example.title}**\n\n`);
                     }
-                    markdown.appendMarkdown(`Current approach (generic example):\n`);
+                    markdown.appendMarkdown('Current approach (generic example):\n');
                     markdown.appendCodeblock(example.before, 'javascript');
-                    markdown.appendMarkdown(`Better approach:\n`);
+                    markdown.appendMarkdown('Better approach:\n');
                     markdown.appendCodeblock(example.after, 'javascript');
                     // Add copy button for warnings
                     const copyArgs = encodeURIComponent(JSON.stringify([example.after]));
@@ -200,23 +200,23 @@ class DecorationManager {
         }
         else {
             // RED (critical) - Full details with all options
-            markdown.appendMarkdown(`### ❌ Problem\n`);
+            markdown.appendMarkdown('### ❌ Problem\n');
             markdown.appendMarkdown(`${template.problemDescription}\n\n`);
             if (template.impactDescription) {
                 markdown.appendMarkdown(`**Impact:** ${template.impactDescription}\n\n`);
             }
-            markdown.appendMarkdown(`### ✅ Solution\n`);
+            markdown.appendMarkdown('### ✅ Solution\n');
             markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
             // Full code examples with all buttons
             if (template.codeExamples && template.codeExamples.length > 0) {
                 template.codeExamples.forEach(example => {
-                    markdown.appendMarkdown(`---\n\n`);
+                    markdown.appendMarkdown('---\n\n');
                     if (example.title) {
                         markdown.appendMarkdown(`**${example.title}**\n\n`);
                     }
-                    markdown.appendMarkdown(`❌ **Before (Problematic):**\n`);
+                    markdown.appendMarkdown('❌ **Before (Problematic):**\n');
                     markdown.appendCodeblock(example.before, 'javascript');
-                    markdown.appendMarkdown(`✅ **After (Optimized):**\n`);
+                    markdown.appendMarkdown('✅ **After (Optimized):**\n');
                     markdown.appendCodeblock(example.after, 'javascript');
                     // Copy and Replace buttons for critical issues
                     const copyArgs = encodeURIComponent(JSON.stringify([example.after]));
@@ -238,7 +238,7 @@ class DecorationManager {
         }
         // Learn more link (for all severities except good)
         if (template.learnMoreUrl && match.severity !== 'good') {
-            markdown.appendMarkdown(`---\n\n`);
+            markdown.appendMarkdown('---\n\n');
             markdown.appendMarkdown(`📚 [Learn More](${template.learnMoreUrl})\n`);
         }
         return new vscode.Hover(markdown);
@@ -251,7 +251,7 @@ class DecorationManager {
         const impacts = {
             'function-too-long': -8,
             'missing-react-memo': -5,
-            'console-logs': -3,
+            'console-logs': -3
             // Add more as needed
         };
         return impacts[ruleId] || -3;

@@ -11,7 +11,7 @@ class MultipleArrayIterationsMatcher {
             enumerable: true,
             configurable: true,
             writable: true,
-            value: ['map', 'filter', 'reduce', 'forEach', 'find', 'some', 'every', 'flatMap']
+            value: ['map', 'filter', 'reduce', 'forEach', 'find', 'some', 'every', 'flatMap', 'sort', 'slice', 'reverse']
         });
     }
     match(node, _context) {
@@ -43,10 +43,11 @@ class MultipleArrayIterationsMatcher {
     }
     getMatchDetails(node, _context) {
         const chainLength = this.countChainLength(node);
+        const baseName = this.getBaseArrayName(node);
         return {
-            complexity: chainLength,
-            impact: `${chainLength} iterations over the same array`,
-            suggestion: 'Combine operations into a single iteration'
+            complexity: Math.max(3, chainLength + 2),
+            impact: `${chainLength} separate iterations over '${baseName || 'the same array'}'`,
+            suggestion: 'Combine operations into a single iteration (e.g., using reduce())'
         };
     }
     countChainLength(node) {
@@ -70,6 +71,41 @@ class MultipleArrayIterationsMatcher {
             }
         }
         return count;
+    }
+    getBaseArrayName(node) {
+        // Walk down the chain to find the root object name, e.g., users in users.filter(...).map(...)
+        let current = node;
+        while (current && current.type === 'CallExpression') {
+            const callee = current.callee;
+            if (callee?.type !== 'MemberExpression')
+                break;
+            current = callee.object;
+        }
+        if (!current)
+            return null;
+        if (current.type === 'Identifier') {
+            return current.name || null;
+        }
+        if (current.type === 'MemberExpression') {
+            // Try to build a dotted name if simple, e.g., this.users
+            const parts = [];
+            let obj = current;
+            while (obj && obj.type === 'MemberExpression') {
+                if (obj.property?.type === 'Identifier') {
+                    parts.unshift(obj.property.name);
+                }
+                else {
+                    break;
+                }
+                if (obj.object?.type === 'Identifier') {
+                    parts.unshift(obj.object.name);
+                    break;
+                }
+                obj = obj.object;
+            }
+            return parts.length ? parts.join('.') : null;
+        }
+        return null;
     }
 }
 exports.MultipleArrayIterationsMatcher = MultipleArrayIterationsMatcher;

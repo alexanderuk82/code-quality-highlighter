@@ -13,31 +13,31 @@ import {
 export class MissingDependenciesMatcher implements PatternMatcher {
   public match(node: ASTNode, context: MatchContext): boolean {
     if (!this.isReactFile(context)) return false;
-    
+
     // Check if it's a useEffect call
     if (node.type !== 'CallExpression') return false;
-    
+
     const callee = (node as any).callee;
     if (callee?.type !== 'Identifier' || callee.name !== 'useEffect') return false;
-    
+
     const args = (node as any).arguments;
     if (!args || args.length < 2) {
       // useEffect without dependency array
       return true;
     }
-    
+
     // Check the dependency array
     const deps = args[1];
     const callback = args[0];
-    
+
     if (!callback) return false;
-    
+
     // Empty dependency array might be intentional, but check for used variables
     if (deps?.type === 'ArrayExpression') {
       const dependencies = deps.elements || [];
       const usedVariables = this.extractUsedVariables(callback);
       const providedDeps = dependencies.map((dep: any) => dep?.name || dep?.value);
-      
+
       // Check for missing dependencies
       for (const variable of usedVariables) {
         if (!providedDeps.includes(variable) && this.isExternalVariable(variable)) {
@@ -45,28 +45,28 @@ export class MissingDependenciesMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isReactFile(context: MatchContext): boolean {
-    return context.language === 'javascriptreact' || 
+    return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||
            context.filePath.includes('.jsx') ||
            context.filePath.includes('.tsx');
   }
-  
+
   private extractUsedVariables(node: ASTNode): Set<string> {
     const variables = new Set<string>();
-    
+
     const traverse = (n: ASTNode) => {
       if (!n) return;
-      
+
       // Identifier usage
       if (n.type === 'Identifier') {
         variables.add((n as any).name);
       }
-      
+
       // Member expression (e.g., props.value)
       if (n.type === 'MemberExpression') {
         const object = (n as any).object;
@@ -74,7 +74,7 @@ export class MissingDependenciesMatcher implements PatternMatcher {
           variables.add(object.name);
         }
       }
-      
+
       // Traverse all properties
       for (const key in n) {
         const value = (n as any)[key];
@@ -87,11 +87,11 @@ export class MissingDependenciesMatcher implements PatternMatcher {
         }
       }
     };
-    
+
     traverse(node);
     return variables;
   }
-  
+
   private isExternalVariable(name: string): boolean {
     // Filter out built-ins and common globals
     const builtins = [
@@ -101,7 +101,7 @@ export class MissingDependenciesMatcher implements PatternMatcher {
       'JSON', 'Math', 'Date', 'Array', 'Object', 'String', 'Number',
       'Boolean', 'Promise', 'Set', 'Map', 'WeakMap', 'WeakSet'
     ];
-    
+
     return !builtins.includes(name);
   }
 }

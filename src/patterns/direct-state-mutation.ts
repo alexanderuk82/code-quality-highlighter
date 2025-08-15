@@ -13,14 +13,14 @@ import {
 export class DirectStateMutationMatcher implements PatternMatcher {
   public match(node: ASTNode, context: MatchContext): boolean {
     if (!this.isReactFile(context)) return false;
-    
+
     // Check for array mutation methods
     if (node.type === 'CallExpression') {
       const callee = (node as any).callee;
       if (callee?.type === 'MemberExpression') {
         const property = callee.property;
         const object = callee.object;
-        
+
         // Check for mutating array methods
         const mutatingMethods = ['push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse'];
         if (property?.type === 'Identifier' && mutatingMethods.includes(property.name)) {
@@ -31,7 +31,7 @@ export class DirectStateMutationMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     // Check for direct property assignment to state
     if (node.type === 'AssignmentExpression') {
       const left = (node as any).left;
@@ -42,25 +42,25 @@ export class DirectStateMutationMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isReactFile(context: MatchContext): boolean {
-    return context.language === 'javascriptreact' || 
+    return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||
            context.filePath.includes('.jsx') ||
            context.filePath.includes('.tsx');
   }
-  
+
   private isStateVariable(node: ASTNode, _context: MatchContext): boolean {
     if (!node) return false;
-    
+
     // Simple heuristic: check if variable name contains 'state' or common state patterns
     if (node.type === 'Identifier') {
       const name = (node as any).name;
       // Common state variable patterns
-      if (name.includes('state') || 
+      if (name.includes('state') ||
           name.includes('State') ||
           name === 'items' ||
           name === 'users' ||
@@ -69,7 +69,7 @@ export class DirectStateMutationMatcher implements PatternMatcher {
         return true;
       }
     }
-    
+
     // Check for this.state (class components)
     if (node.type === 'MemberExpression') {
       const object = (node as any).object;
@@ -77,13 +77,13 @@ export class DirectStateMutationMatcher implements PatternMatcher {
       if (object?.type === 'ThisExpression' && property?.name === 'state') {
         return true;
       }
-      
+
       // Check for nested state access (e.g., state.items)
       if (object?.type === 'Identifier' && object.name.includes('state')) {
         return true;
       }
     }
-    
+
     return false;
   }
 }

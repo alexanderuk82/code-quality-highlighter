@@ -14,13 +14,13 @@ export class InlineFunctionPropsMatcher implements PatternMatcher {
   public match(node: ASTNode, context: MatchContext): boolean {
     // Only check in React files
     if (!this.isReactFile(context)) return false;
-    
+
     // Check if this is a JSX attribute
     if (node.type !== 'JSXAttribute') return false;
-    
+
     const value = (node as any).value;
     if (!value) return false;
-    
+
     // Check if value is JSXExpressionContainer with arrow function
     if (value.type === 'JSXExpressionContainer') {
       const expression = value.expression;
@@ -31,41 +31,41 @@ export class InlineFunctionPropsMatcher implements PatternMatcher {
           return true;
         }
       }
-      
+
       // Also check for inline bind() calls
       if (expression?.type === 'CallExpression') {
         const callee = expression.callee;
-        if (callee?.type === 'MemberExpression' && 
+        if (callee?.type === 'MemberExpression' &&
             callee.property?.name === 'bind') {
           return true;
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isReactFile(context: MatchContext): boolean {
-    return context.language === 'javascriptreact' || 
+    return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||
            context.filePath.includes('.jsx') ||
            context.filePath.includes('.tsx');
   }
-  
+
   private isSimpleReference(node: ASTNode): boolean {
     // Check if it's just a simple function that returns a prop or constant
     const body = (node as any).body;
-    if (body?.type === 'Identifier' || 
+    if (body?.type === 'Identifier' ||
         body?.type === 'Literal' ||
         (body?.type === 'MemberExpression' && !this.hasNestedCalls(body))) {
       return true;
     }
     return false;
   }
-  
+
   private hasNestedCalls(node: ASTNode): boolean {
     if (node.type === 'CallExpression') return true;
-    
+
     for (const key in node) {
       const value = (node as any)[key];
       if (value && typeof value === 'object' && value.type) {

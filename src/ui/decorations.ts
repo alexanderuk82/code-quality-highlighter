@@ -34,7 +34,7 @@ export class DecorationManager {
   private provideHover(document: vscode.TextDocument, position: vscode.Position): vscode.Hover | undefined {
     const filePath = document.uri.fsPath;
     const matches = this.activeDecorations.get(filePath);
-    
+
     if (!matches) {
       console.log('[Hover] No matches found for file:', filePath);
       return undefined;
@@ -50,9 +50,9 @@ export class DecorationManager {
       console.log('[Hover] No match at position:', position);
       return undefined;
     }
-    
+
     console.log('[Hover] Found match:', match.ruleId, 'severity:', match.severity, 'has template:', !!match.template);
-    
+
     if (!match.template) {
       console.log('[Hover] Match has no template!');
       return undefined;
@@ -85,7 +85,7 @@ export class DecorationManager {
           snippet = snippet.slice(0, 600) + '\n...';
         }
         if (snippet.length > 0) {
-          markdown.appendMarkdown(`### This code\n`);
+          markdown.appendMarkdown('### This code\n');
           markdown.appendCodeblock(snippet, 'javascript');
         }
       }
@@ -93,120 +93,120 @@ export class DecorationManager {
       // Best effort; avoid breaking the hover if conversion fails
       console.warn('[Hover] Failed to extract code snippet:', e);
     }
-    
+
     // Adjust content based on severity
     if (match.severity === 'good') {
       // GREEN - Only positive feedback
-      markdown.appendMarkdown(`### ✅ Excellent!\n`);
+      markdown.appendMarkdown('### ✅ Excellent!\n');
       markdown.appendMarkdown(`You're following best practices! ${template.solutionDescription}\n\n`);
-      
+
       if (template.impactDescription) {
         markdown.appendMarkdown(`**Benefits:** ${template.impactDescription}\n\n`);
       }
-      
+
       // Show examples of what you're doing right
       if (template.codeExamples && template.codeExamples.length > 0) {
-        markdown.appendMarkdown(`### 📚 Why This Is Good:\n\n`);
+        markdown.appendMarkdown('### 📚 Why This Is Good:\n\n');
         template.codeExamples.forEach(example => {
           if (example.title) {
             markdown.appendMarkdown(`**${example.title}**\n\n`);
           }
-          markdown.appendMarkdown(`You're using:\n`);
+          markdown.appendMarkdown('You\'re using:\n');
           markdown.appendCodeblock(example.after, 'javascript');
           if (example.improvement) {
             markdown.appendMarkdown(`**Benefit:** ${example.improvement}\n\n`);
           }
         });
       }
-      
+
     } else if (match.severity === 'info') {
       // YELLOW - Score impact and gentle suggestion
-      markdown.appendMarkdown(`### 📊 Score Impact\n`);
+      markdown.appendMarkdown('### 📊 Score Impact\n');
       const scoreImpact = this.getScoreImpact(match.ruleId);
       markdown.appendMarkdown(`This affects your score by **${scoreImpact} points**.\n\n`);
-      
+
       if (template.problemDescription) {
         markdown.appendMarkdown(`**Note:** ${template.problemDescription}\n\n`);
       }
-      
-      markdown.appendMarkdown(`### 💡 Suggestion\n`);
+
+      markdown.appendMarkdown('### 💡 Suggestion\n');
       markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
-      
+
       // Simple example
       if (template.codeExamples && template.codeExamples.length > 0) {
         const example = template.codeExamples[0];
         if (example) {
-          markdown.appendMarkdown(`**Consider this approach:**\n`);
+          markdown.appendMarkdown('**Consider this approach:**\n');
           markdown.appendCodeblock(example.after, 'javascript');
         }
       }
-      
+
     } else if (match.severity === 'warning') {
       // ORANGE - Warning with explanation
-      markdown.appendMarkdown(`### ⚠️ Warning\n`);
+      markdown.appendMarkdown('### ⚠️ Warning\n');
       markdown.appendMarkdown(`${template.problemDescription}\n\n`);
-      
+
       if (template.impactDescription) {
         markdown.appendMarkdown(`**Why it matters:** ${template.impactDescription}\n\n`);
       }
-      
-      markdown.appendMarkdown(`### 🔧 How to Fix\n`);
+
+      markdown.appendMarkdown('### 🔧 How to Fix\n');
       markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
-      
+
       // Show before/after
       if (template.codeExamples && template.codeExamples.length > 0) {
         template.codeExamples.forEach(example => {
           if (example.title) {
             markdown.appendMarkdown(`**${example.title}**\n\n`);
           }
-          
-          markdown.appendMarkdown(`Current approach (generic example):\n`);
+
+          markdown.appendMarkdown('Current approach (generic example):\n');
           markdown.appendCodeblock(example.before, 'javascript');
-          
-          markdown.appendMarkdown(`Better approach:\n`);
+
+          markdown.appendMarkdown('Better approach:\n');
           markdown.appendCodeblock(example.after, 'javascript');
-          
+
           // Add copy button for warnings
           const copyArgs = encodeURIComponent(JSON.stringify([example.after]));
           markdown.appendMarkdown(`\n[📋 Copy Solution](command:codeQuality.copySolution?${copyArgs})\n\n`);
-          
+
           if (example.improvement) {
             markdown.appendMarkdown(`**Improvement:** ${example.improvement}\n\n`);
           }
         });
       }
-      
+
     } else {
       // RED (critical) - Full details with all options
-      markdown.appendMarkdown(`### ❌ Problem\n`);
+      markdown.appendMarkdown('### ❌ Problem\n');
       markdown.appendMarkdown(`${template.problemDescription}\n\n`);
-      
+
       if (template.impactDescription) {
         markdown.appendMarkdown(`**Impact:** ${template.impactDescription}\n\n`);
       }
 
-      markdown.appendMarkdown(`### ✅ Solution\n`);
+      markdown.appendMarkdown('### ✅ Solution\n');
       markdown.appendMarkdown(`${template.solutionDescription}\n\n`);
 
       // Full code examples with all buttons
       if (template.codeExamples && template.codeExamples.length > 0) {
         template.codeExamples.forEach(example => {
-          markdown.appendMarkdown(`---\n\n`);
-          
+          markdown.appendMarkdown('---\n\n');
+
           if (example.title) {
             markdown.appendMarkdown(`**${example.title}**\n\n`);
           }
 
-          markdown.appendMarkdown(`❌ **Before (Problematic):**\n`);
+          markdown.appendMarkdown('❌ **Before (Problematic):**\n');
           markdown.appendCodeblock(example.before, 'javascript');
-          
-          markdown.appendMarkdown(`✅ **After (Optimized):**\n`);
+
+          markdown.appendMarkdown('✅ **After (Optimized):**\n');
           markdown.appendCodeblock(example.after, 'javascript');
-          
+
           // Copy and Replace buttons for critical issues
           const copyArgs = encodeURIComponent(JSON.stringify([example.after]));
           markdown.appendMarkdown(`\n[📋 Copy Solution](command:codeQuality.copySolution?${copyArgs} "Click to copy optimized code")`);
-          
+
           const replaceData = {
             range: {
               start: { line: match.range.start.line, character: match.range.start.character },
@@ -216,7 +216,7 @@ export class DecorationManager {
           };
           const replaceArgs = encodeURIComponent(JSON.stringify([JSON.stringify(replaceData)]));
           markdown.appendMarkdown(` | [🔄 Replace Code](command:codeQuality.replaceCode?${replaceArgs} "Replace with optimized code")\n\n`);
-          
+
           if (example.improvement) {
             markdown.appendMarkdown(`**🚀 Performance Gain:** ${example.improvement}\n\n`);
           }
@@ -226,13 +226,13 @@ export class DecorationManager {
 
     // Learn more link (for all severities except good)
     if (template.learnMoreUrl && match.severity !== 'good') {
-      markdown.appendMarkdown(`---\n\n`);
+      markdown.appendMarkdown('---\n\n');
       markdown.appendMarkdown(`📚 [Learn More](${template.learnMoreUrl})\n`);
     }
 
     return new vscode.Hover(markdown);
   }
-  
+
   /**
    * Get score impact for a rule
    */
@@ -241,7 +241,7 @@ export class DecorationManager {
     const impacts: Record<string, number> = {
       'function-too-long': -8,
       'missing-react-memo': -5,
-      'console-logs': -3,
+      'console-logs': -3
       // Add more as needed
     };
     return impacts[ruleId] || -3;
@@ -328,7 +328,7 @@ export class DecorationManager {
     if (!editor) return;
 
     const filePath = editor.document.uri.fsPath;
-    
+
     // Store matches with their templates for hover provider
     this.activeDecorations.set(filePath, matches);
 
@@ -424,7 +424,7 @@ export class DecorationManager {
   ): vscode.DecorationOptions[] {
     return matches.map(match => {
       const range = this.convertToVSCodeRange(match.range, editor.document);
-      
+
       return {
         range,
         renderOptions: {
@@ -517,7 +517,7 @@ export class DecorationManager {
     });
     this.decorationTypes.clear();
     this.activeDecorations.clear();
-    
+
     if (this.hoverProvider) {
       this.hoverProvider.dispose();
     }

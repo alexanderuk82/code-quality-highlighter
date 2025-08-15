@@ -15,8 +15,8 @@ export class InefficientObjectAccessMatcher implements PatternMatcher {
     if (!this.isRelevantNode(node)) return false;
     if (!this.isInsideLoop(node, context)) return false;
 
-    return this.isRepeatedPropertyAccess(node, context) ||
-           this.isDeepPropertyAccess(node) ||
+  return this.isRepeatedPropertyAccess(node, context) ||
+       this.isDeepPropertyAccess(node) ||
            this.isRepeatedMethodCall(node, context);
   }
 
@@ -66,8 +66,12 @@ export class InefficientObjectAccessMatcher implements PatternMatcher {
     const propertyPath = this.getPropertyPath(node);
     if (!propertyPath || propertyPath.split('.').length < 2) return false;
 
+    // Also consider repeated access to the same base path (e.g., user.profile.*)
+    const basePath = propertyPath.split('.').slice(0, -1).join('.');
+
     // Check if this property is accessed multiple times in the same loop
-    return this.countPropertyAccessInLoop(propertyPath, context) > 1;
+  return this.countPropertyAccessInLoop(propertyPath, context) > 1 ||
+       (!!basePath && this.countPropertyAccessInLoop(basePath + '.', context) > 1);
   }
 
   private isDeepPropertyAccess(node: AnyASTNode): boolean {
@@ -179,7 +183,7 @@ export class InefficientObjectAccessMatcher implements PatternMatcher {
   private calculateComplexity(node: AnyASTNode): number {
     if (node.type === 'MemberExpression') {
       const depth = this.getPropertyDepth(node);
-      return Math.min(depth * 2, 8);
+      return Math.max(5, Math.min(depth * 2, 8));
     } else if (node.type === 'CallExpression') {
       return 6; // Method calls are generally more expensive
     }

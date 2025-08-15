@@ -11,6 +11,7 @@ export declare class MultipleArrayIterationsMatcher implements PatternMatcher {
         suggestion: string;
     };
     private countChainLength;
+    private getBaseArrayName;
 }
 export declare const multipleArrayIterationsRule: PatternRule;
 //# sourceMappingURL=multiple-array-iterations.d.ts.map

@@ -12,35 +12,35 @@ import {
  */
 export class FunctionTooLongMatcher implements PatternMatcher {
   private readonly WARNING_LINES = 30;
-  
+
   public match(node: ASTNode, _context: MatchContext): boolean {
     // Check all function types
     if (!this.isFunctionNode(node)) return false;
-    
+
     const lineCount = this.calculateFunctionLines(node);
     return lineCount > this.WARNING_LINES;
   }
-  
+
   private isFunctionNode(node: ASTNode): boolean {
     return node.type === 'FunctionDeclaration' ||
            node.type === 'FunctionExpression' ||
            node.type === 'ArrowFunctionExpression' ||
            node.type === 'MethodDefinition';
   }
-  
+
   private calculateFunctionLines(node: ASTNode): number {
     const loc = (node as any).loc;
     if (!loc) return 0;
-    
+
     const startLine = loc.start.line;
     const endLine = loc.end.line;
-    
+
     return endLine - startLine + 1;
   }
-  
+
   public getMatchDetails(node: ASTNode, _context: MatchContext) {
     const lineCount = this.calculateFunctionLines(node);
-    
+
     return {
       complexity: lineCount,
       impact: `Function has ${lineCount} lines (recommended: <30, max: 50)`,

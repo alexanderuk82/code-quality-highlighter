@@ -13,11 +13,11 @@ import {
 export class MissingReactMemoMatcher implements PatternMatcher {
   public match(node: ASTNode, context: MatchContext): boolean {
     if (!this.isReactFile(context)) return false;
-    
+
     // Check for function declarations that are components
     if (node.type === 'FunctionDeclaration' || node.type === 'ArrowFunctionExpression') {
       const name = this.getFunctionName(node);
-      
+
       // React components start with uppercase
       if (name && /^[A-Z]/.test(name)) {
         // Check if it returns JSX
@@ -32,82 +32,82 @@ export class MissingReactMemoMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isReactFile(context: MatchContext): boolean {
-    return context.language === 'javascriptreact' || 
+    return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||
            context.filePath.includes('.jsx') ||
            context.filePath.includes('.tsx');
   }
-  
+
   private getFunctionName(node: ASTNode): string | null {
     if (node.type === 'FunctionDeclaration') {
       return (node as any).id?.name || null;
     }
-    
+
     // For arrow functions, check if assigned to a variable
     const parent = (node as any).parent;
     if (parent?.type === 'VariableDeclarator') {
       return parent.id?.name || null;
     }
-    
+
     return null;
   }
-  
+
   private returnsJSX(node: ASTNode): boolean {
     const body = (node as any).body;
-    
+
     // Direct return of JSX
     if (body?.type === 'JSXElement' || body?.type === 'JSXFragment') {
       return true;
     }
-    
+
     // Return statement with JSX
     if (body?.type === 'BlockStatement') {
       const statements = body.body || [];
       for (const stmt of statements) {
-        if (stmt.type === 'ReturnStatement' && 
-            (stmt.argument?.type === 'JSXElement' || 
+        if (stmt.type === 'ReturnStatement' &&
+            (stmt.argument?.type === 'JSXElement' ||
              stmt.argument?.type === 'JSXFragment' ||
              stmt.argument?.type === 'ConditionalExpression')) {
           return true;
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isWrappedInMemo(node: ASTNode, context: MatchContext): boolean {
     // Check if the component is wrapped in React.memo
     const sourceCode = context.sourceCode;
     const name = this.getFunctionName(node);
-    
+
     if (name) {
       // Simple check for React.memo wrapper
-      return sourceCode.includes(`React.memo(${name})`) || 
+      return sourceCode.includes(`React.memo(${name})`) ||
              sourceCode.includes(`memo(${name})`);
     }
-    
+
     return false;
   }
-  
+
   private isPureComponent(node: ASTNode): boolean {
     // Check if component doesn't use state or complex hooks
     // that would make memoization ineffective
     const body = (node as any).body;
-    
+
     if (body?.type === 'BlockStatement') {
       const hasStateHooks = this.hasHooks(body, ['useState', 'useReducer', 'useContext']);
       return !hasStateHooks;
     }
-    
+
     return true;
   }
-  
+
   private hasHooks(node: ASTNode, hookNames: string[]): boolean {
     if (node.type === 'CallExpression') {
       const callee = (node as any).callee;
@@ -115,7 +115,7 @@ export class MissingReactMemoMatcher implements PatternMatcher {
         return true;
       }
     }
-    
+
     for (const key in node) {
       const value = (node as any)[key];
       if (Array.isArray(value)) {
@@ -130,7 +130,7 @@ export class MissingReactMemoMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     return false;
   }
 }

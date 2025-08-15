@@ -21,10 +21,11 @@ export declare class InfiniteRecursionRisksMatcher implements PatternMatcher {
     private containsAnonymousRecursion;
     private lacksBaseCase;
     private hasNonRecursiveReturn;
-    private hasObviousBaseCase;
     private looksLikeBaseCase;
     private containsFunctionCall;
+    private hasDirectRecursiveReturn;
     private hasUnmodifiedRecursion;
+    private findRecursiveCallWithSameArgs;
     private lacksDepthLimit;
     private getRiskType;
     private calculateComplexity;

@@ -13,13 +13,13 @@ import {
 export class MissingKeysInListsMatcher implements PatternMatcher {
   public match(node: ASTNode, context: MatchContext): boolean {
     if (!this.isReactFile(context)) return false;
-    
+
     // Check for map calls that return JSX
     if (node.type === 'CallExpression') {
       const callee = (node as any).callee;
-      if (callee?.type === 'MemberExpression' && 
+      if (callee?.type === 'MemberExpression' &&
           callee.property?.name === 'map') {
-        
+
         const callback = (node as any).arguments?.[0];
         if (callback && this.returnsJSX(callback)) {
           // Check if the JSX has a key prop
@@ -27,7 +27,7 @@ export class MissingKeysInListsMatcher implements PatternMatcher {
           if (jsxElement && !this.hasKeyProp(jsxElement)) {
             return true;
           }
-          
+
           // Also check for index as key (anti-pattern)
           if (jsxElement && this.hasIndexAsKey(jsxElement, callback)) {
             return true;
@@ -35,30 +35,30 @@ export class MissingKeysInListsMatcher implements PatternMatcher {
         }
       }
     }
-    
+
     return false;
   }
-  
+
   private isReactFile(context: MatchContext): boolean {
-    return context.language === 'javascriptreact' || 
+    return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||
            context.filePath.includes('.jsx') ||
            context.filePath.includes('.tsx');
   }
-  
+
   private returnsJSX(node: ASTNode): boolean {
     if (!node) return false;
-    
+
     const body = (node as any).body;
-    
+
     // Direct return
     if (body?.type === 'JSXElement' || body?.type === 'JSXFragment') {
       return true;
     }
-    
+
     // Return statement
     if (body?.type === 'BlockStatement') {
-      const returnStmt = body.body?.find((stmt: any) => 
+      const returnStmt = body.body?.find((stmt: any) =>
         stmt.type === 'ReturnStatement'
       );
       if (returnStmt?.argument?.type === 'JSXElement' ||
@@ -66,62 +66,62 @@ export class MissingKeysInListsMatcher implements PatternMatcher {
         return true;
       }
     }
-    
+
     // Implicit return in arrow function
-    if (body?.type === 'JSXElement' || 
-        (body?.type === 'ConditionalExpression' && 
-         (body.consequent?.type === 'JSXElement' || 
+    if (body?.type === 'JSXElement' ||
+        (body?.type === 'ConditionalExpression' &&
+         (body.consequent?.type === 'JSXElement' ||
           body.alternate?.type === 'JSXElement'))) {
       return true;
     }
-    
+
     return false;
   }
-  
+
   private getReturnedJSX(node: ASTNode): ASTNode | null {
     const body = (node as any).body;
-    
+
     if (body?.type === 'JSXElement') {
       return body;
     }
-    
+
     if (body?.type === 'BlockStatement') {
-      const returnStmt = body.body?.find((stmt: any) => 
+      const returnStmt = body.body?.find((stmt: any) =>
         stmt.type === 'ReturnStatement'
       );
       return returnStmt?.argument || null;
     }
-    
+
     return null;
   }
-  
+
   private hasKeyProp(jsxElement: ASTNode): boolean {
     if (!jsxElement || jsxElement.type !== 'JSXElement') return false;
-    
+
     const attributes = (jsxElement as any).openingElement?.attributes || [];
-    return attributes.some((attr: any) => 
+    return attributes.some((attr: any) =>
       attr.type === 'JSXAttribute' && attr.name?.name === 'key'
     );
   }
-  
+
   private hasIndexAsKey(jsxElement: ASTNode, mapCallback: ASTNode): boolean {
     if (!jsxElement || !mapCallback) return false;
-    
+
     // Check if second parameter of map callback is used as key
     const params = (mapCallback as any).params;
     if (params?.length >= 2) {
       const indexParam = params[1]?.name;
-      
+
       const attributes = (jsxElement as any).openingElement?.attributes || [];
-      const keyAttr = attributes.find((attr: any) => 
+      const keyAttr = attributes.find((attr: any) =>
         attr.type === 'JSXAttribute' && attr.name?.name === 'key'
       );
-      
+
       if (keyAttr?.value?.expression?.name === indexParam) {
         return true; // Using index as key
       }
     }
-    
+
     return false;
   }
 }
