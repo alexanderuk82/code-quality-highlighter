@@ -95,13 +95,13 @@ class DecorationManager {
             console.log('[Hover] Match has no template!');
             return undefined;
         }
-        const hover = this.createDetailedHover(match);
+        const hover = this.createDetailedHover(match, document);
         return hover;
     }
     /**
      * Create detailed hover with problem, solution, and code examples
      */
-    createDetailedHover(match) {
+    createDetailedHover(match, document) {
         const template = match.template;
         const markdown = new vscode.MarkdownString();
         markdown.isTrusted = true;
@@ -109,6 +109,25 @@ class DecorationManager {
         // Title with severity icon
         const severityIcon = this.getSeverityIcon(match.severity);
         markdown.appendMarkdown(`## ${severityIcon} ${template.title}\n\n`);
+        // Show the exact code that triggered the match (except for 'good')
+        try {
+            if (match.severity !== 'good') {
+                const vsRange = this.convertToVSCodeRange(match.range, document);
+                let snippet = document.getText(vsRange).trim();
+                // Truncate very large snippets to keep hovers responsive
+                if (snippet.length > 600) {
+                    snippet = snippet.slice(0, 600) + '\n...';
+                }
+                if (snippet.length > 0) {
+                    markdown.appendMarkdown(`### This code\n`);
+                    markdown.appendCodeblock(snippet, 'javascript');
+                }
+            }
+        }
+        catch (e) {
+            // Best effort; avoid breaking the hover if conversion fails
+            console.warn('[Hover] Failed to extract code snippet:', e);
+        }
         // Adjust content based on severity
         if (match.severity === 'good') {
             // GREEN - Only positive feedback
@@ -166,7 +185,7 @@ class DecorationManager {
                     if (example.title) {
                         markdown.appendMarkdown(`**${example.title}**\n\n`);
                     }
-                    markdown.appendMarkdown(`Current approach:\n`);
+                    markdown.appendMarkdown(`Current approach (generic example):\n`);
                     markdown.appendCodeblock(example.before, 'javascript');
                     markdown.appendMarkdown(`Better approach:\n`);
                     markdown.appendCodeblock(example.after, 'javascript');
