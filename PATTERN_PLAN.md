@@ -143,3 +143,124 @@
 3. **Week 3**: Priority 3 - Code Quality (20)
 4. **Week 4**: Priority 4 & 5 - Async & Security (20)
 5. **Week 5**: Priority 6 - Best Practices (10)
+
+---
+
+## ▶ NEXT PHASE: 20 NEW PATTERNS (10 JS + 10 React)
+
+Notes
+- Follow existing contracts in `src/types.ts` and examples like `nested-loops.ts` and `inline-function-props.ts`.
+- Provide complete Tooltip templates (problem, impact, solution, codeExamples, actions/learnMore).
+- Register in `initializePatterns()` in `src/extension.ts`.
+- Add unit tests in `tests/unit/patterns/*` mirroring `nested-loops.test.ts`.
+
+### JavaScript (10)
+1) id: excessive-dom-manipulation
+	- category: Perf, severity: warning, languages: js/ts
+	- Detect: multiple DOM write ops (innerText, style, classList, appendChild) in tight sequence/loop without batching (rAF/fragment).
+	- Score: -8; Tests: simple loop updating DOM; Template: suggest batching or rAF.
+
+2) id: synchronous-xhr
+	- category: Perf, severity: critical, languages: js/ts
+	- Detect: new XMLHttpRequest with third arg false or xhr.open(..., false) or deprecated sync fetch polyfills.
+	- Score: -15; Tests: flag sync XHR; Template: switch to async fetch/await.
+
+3) id: large-array-spreading
+	- category: Perf, severity: warning, languages: js/ts
+	- Detect: spread on identifiers with likely large size (heuristic: name like list/array/items and used in loops) or spread in hot loops.
+	- Score: -8; Tests: spread in loop; Template: use push/apply or preallocate.
+
+4) id: repeated-regex-compilation
+	- category: Perf, severity: warning, languages: js/ts
+	- Detect: new RegExp(...) or /literal/ inside loops or frequently called functions.
+	- Score: -8; Tests: regex in loop; Template: hoist regex.
+
+5) id: unhandled-promises
+	- category: Maint, severity: warning, languages: js/ts
+	- Detect: call returning Promise not awaited and not .then/.catch; await without try/catch in top-level critical paths.
+	- Score: -8; Tests: missing catch; Template: add catch or try/catch.
+
+6) id: async-without-await
+	- category: Maint, severity: info, languages: js/ts
+	- Detect: async function body has no await; may be unnecessary.
+	- Score: -3; Tests: async no await; Template: remove async or add await.
+
+7) id: blocking-await-in-loops
+	- category: Perf, severity: warning, languages: js/ts
+	- Detect: await inside for/for..of where independent calls could be Promise.all.
+	- Score: -8; Tests: sequential vs Promise.all; Template: batch with Promise.all.
+
+8) id: eval-usage
+	- category: Sec, severity: critical, languages: js/ts
+	- Detect: eval(), new Function(), setTimeout/Interval with string arg.
+	- Score: -15; Tests: flag eval; Template: avoid eval, use JSON.parse or safe alternatives.
+
+9) id: innerhtml-usage
+	- category: Sec, severity: critical, languages: js/ts
+	- Detect: element.innerHTML = variable/template; document.write.
+	- Score: -15; Tests: flag innerHTML assignment; Template: textContent or sanitized libs.
+
+10) id: unsafe-regex
+	 - category: Sec, severity: warning, languages: js/ts
+	 - Detect: regex patterns with nested quantifiers (.+)+, catastrophic backtracking heuristics.
+	 - Score: -8; Tests: sample unsafe regex; Template: use safe regex or timeouts.
+
+### React (10)
+1) id: objects-in-render
+	- category: Perf, severity: warning, languages: jsx/tsx
+	- Detect: object/array literals in JSX props or as deps; advise useMemo/useCallback.
+	- Score: -8; Tests: <Comp style={{...}} fn={() => {}}/>; Template: memoize.
+
+2) id: index-as-key
+	- category: Maint, severity: warning, languages: jsx/tsx
+	- Detect: key={index} or key={i};
+	- Score: -8; Tests: map with index key; Template: use stable IDs.
+
+3) id: expensive-initial-state
+	- category: Perf, severity: warning, languages: jsx/tsx
+	- Detect: useState(expensiveCall()) instead of lazy initializer () => expensiveCall().
+	- Score: -8; Tests: flag direct call; Template: wrap in lazy init.
+
+4) id: missing-usememo
+	- category: Perf, severity: info, languages: jsx/tsx
+	- Detect: heavy calc in render without useMemo.
+	- Score: -3; Tests: CPU-heavy loop; Template: memoize with deps.
+
+5) id: stale-closures
+	- category: Hooks, severity: critical, languages: jsx/tsx
+	- Detect: useCallback/useEffect using vars not in deps array.
+	- Score: -15; Tests: missing deps; Template: add deps or ref.
+
+6) id: conditional-hooks
+	- category: Hooks, severity: critical, languages: jsx/tsx
+	- Detect: hooks inside if/try/catch/early returns.
+	- Score: -15; Tests: hook in condition; Template: move hooks to top level.
+
+7) id: hooks-in-loops
+	- category: Hooks, severity: critical, languages: jsx/tsx
+	- Detect: hooks inside loops.
+	- Score: -15; Tests: hook in loop; Template: refactor structure.
+
+8) id: missing-cleanup
+	- category: Hooks, severity: warning, languages: jsx/tsx
+	- Detect: useEffect starting subscriptions/timeouts without return cleanup.
+	- Score: -8; Tests: setInterval without cleanup; Template: return cleanup.
+
+9) id: infinite-rerender
+	- category: Hooks, severity: critical, languages: jsx/tsx
+	- Detect: setState in render; or effect setting state with that state in deps causing loop.
+	- Score: -15; Tests: reproducing loop; Template: guard conditions/memoization.
+
+10) id: unnecessary-rerenders
+	 - category: Perf, severity: warning, languages: jsx/tsx
+	 - Detect: useEffect deps include inline functions/objects created in render.
+	 - Score: -8; Tests: deps with inline fn; Template: memoize deps.
+
+### Implementation cadence
+- Week A: JS (#1–#5) + React (#1–#5)
+- Week B: JS (#6–#10) + React (#6–#10)
+
+### Files to add per pattern
+- `src/patterns/<id>.ts`: PatternRule + matcher.
+- `tests/unit/patterns/<id>.test.ts`: Matcher tests (happy + edge case).
+- Register in `initializePatterns()`.
