@@ -22,6 +22,19 @@ class RepeatedRegexCompilationMatcher implements PatternMatcher {
     return false;
   }
 
+  public getMatchDetails(_node: ASTNode, _context: MatchContext) {
+    // Provide a conservative, copy-only fix suggestion to hoist regex creation
+    return {
+      impact: 'Avoid recompiling regular expressions in hot paths; hoist or cache them to reduce allocations.',
+      suggestion: 'Create the RegExp once outside the loop and reuse it within the loop body.',
+      fix: {
+  type: 'copy' as const,
+  title: 'Hoist regex outside the loop',
+  text: '// Hoist regex outside the loop\nconst re = /pattern/; // or new RegExp(\'pattern\')\nfor (/* items */) {\n  // reuse compiled regex\n  // count += re.test(s) ? 1 : 0;\n}'
+      }
+    } as const;
+  }
+
   private containsRegexCreation(n: any): boolean {
     if (!n) return false;
 

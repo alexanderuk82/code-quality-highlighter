@@ -97,6 +97,9 @@ export class PatternEngine {
     this.traverseAST(ast, (node) => {
       try {
         if (rule.matcher.match(node, context)) {
+          const details = typeof rule.matcher.getMatchDetails === 'function'
+            ? rule.matcher.getMatchDetails(node, context)
+            : undefined;
           const match: PatternMatch = {
             ruleId: rule.id,
             severity: rule.severity,
@@ -108,7 +111,8 @@ export class PatternEngine {
               lineNumber: node.loc?.start.line || 1,
               columnNumber: node.loc?.start.column || 1
             },
-            template: rule.template  // Add template here
+            template: rule.template,  // Add template here
+            details
           };
           matches.push(match);
         }

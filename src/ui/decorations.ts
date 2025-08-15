@@ -94,6 +94,29 @@ export class DecorationManager {
       console.warn('[Hover] Failed to extract code snippet:', e);
     }
 
+    // Personalized fix (if available)
+    if (match.details?.fix && match.severity !== 'good') {
+      const fx = match.details.fix;
+      markdown.appendMarkdown('### 🛠️ Proposed fix (personalized)\n');
+      if (fx.type === 'copy' && fx.text) {
+        markdown.appendCodeblock(fx.text, 'javascript');
+        const copyArgs = encodeURIComponent(JSON.stringify([fx.text]));
+        markdown.appendMarkdown(`\n[📋 Copy Solution](command:codeQuality.copySolution?${copyArgs})\n\n`);
+      } else if (fx.type === 'replace' && fx.newText) {
+        markdown.appendCodeblock(fx.newText, 'javascript');
+        const target = fx.range ? fx.range : match.range;
+        const replaceData = {
+          range: {
+            start: { line: target.start.line, character: target.start.character },
+            end: { line: target.end.line, character: target.end.character }
+          },
+          newCode: fx.newText
+        };
+        const replaceArgs = encodeURIComponent(JSON.stringify([JSON.stringify(replaceData)]));
+        markdown.appendMarkdown(`\n[🔄 Replace Code](command:codeQuality.replaceCode?${replaceArgs} "Replace with proposed fix")\n\n`);
+      }
+    }
+
     // Adjust content based on severity
     if (match.severity === 'good') {
       // GREEN - Only positive feedback

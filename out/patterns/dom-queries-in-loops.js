@@ -48,10 +48,20 @@ class DOMQueriesInLoopsMatcher {
     }
     getMatchDetails(node, _context) {
         const operationType = this.getDOMOperationType(node);
+        const fixSnippets = {
+            'DOM Query': '// Cache DOM query outside the loop\nconst container = document.querySelector(\'.container\');\nfor (/* items */) {\n  // use container here\n}',
+            'DOM Manipulation': '// Batch DOM updates with a DocumentFragment\nconst fragment = document.createDocumentFragment();\nfor (/* items */) {\n  const el = document.createElement(\'div\');\n  fragment.appendChild(el);\n}\ncontainer.appendChild(fragment);',
+            'Style/Layout': '// Cache expensive style/layout reads\nconst sizes = elements.map(el => el.getBoundingClientRect());\nelements.forEach((el, i) => {\n  el.style.top = sizes[i].top + \'px\';\n});'
+        };
         return {
             complexity: this.estimateComplexity(operationType),
             impact: `${operationType} operation in loop forces browser reflow/repaint on each iteration`,
-            suggestion: this.getSuggestion(operationType)
+            suggestion: this.getSuggestion(operationType),
+            fix: {
+                type: 'copy',
+                title: operationType + ': recommended structure',
+                text: fixSnippets[operationType] || '// Move DOM operations outside the loop when possible\n// or batch them using a DocumentFragment'
+            }
         };
     }
     isRelevantNode(node) {

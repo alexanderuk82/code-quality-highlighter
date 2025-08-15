@@ -8,9 +8,14 @@ export declare class DOMQueriesInLoopsMatcher implements PatternMatcher {
     private readonly expensiveStyleMethods;
     match(node: AnyASTNode, context: MatchContext): boolean;
     getMatchDetails(node: AnyASTNode, _context: MatchContext): {
-        complexity: number;
-        impact: string;
-        suggestion: string;
+        readonly complexity: number;
+        readonly impact: `${string} operation in loop forces browser reflow/repaint on each iteration`;
+        readonly suggestion: string;
+        readonly fix: {
+            readonly type: "copy";
+            readonly title: string;
+            readonly text: string;
+        };
     };
     private isRelevantNode;
     private isInsideLoop;

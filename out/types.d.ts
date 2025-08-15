@@ -55,6 +55,7 @@ export interface PatternMatch {
     node: AnyASTNode;
     context: MatchContext;
     template?: TooltipTemplate;
+    details?: MatchDetails | undefined;
 }
 /**
  * Context information for pattern matches
@@ -97,6 +98,7 @@ export interface MatchDetails {
     impact?: string;
     suggestion?: string;
     examples?: CodeExample[];
+    fix?: FixSuggestion;
 }
 /**
  * Code example for tooltips
@@ -127,6 +129,18 @@ export interface TooltipAction {
     type: 'copy' | 'apply' | 'explain' | 'configure';
     payload: string;
     command?: string;
+}
+/**
+ * Lightweight fix suggestion to show in hover
+ * - copy: provide `text` to copy to clipboard
+ * - replace: provide `newText` and optional explicit `range` (falls back to match range)
+ */
+export interface FixSuggestion {
+    type: 'copy' | 'replace';
+    title?: string;
+    text?: string;
+    newText?: string;
+    range?: Range;
 }
 /**
  * Analysis result for a file

@@ -4,6 +4,7 @@ import { PatternRule, PatternMatcher, ASTNode, MatchContext } from '../types';
  */
 export declare class MissingDependenciesMatcher implements PatternMatcher {
     match(node: ASTNode, context: MatchContext): boolean;
+    getMatchDetails(_node: ASTNode, _context: MatchContext): any;
     private isReactFile;
     private extractUsedVariables;
     private isExternalVariable;

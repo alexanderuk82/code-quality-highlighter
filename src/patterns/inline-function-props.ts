@@ -45,6 +45,18 @@ export class InlineFunctionPropsMatcher implements PatternMatcher {
     return false;
   }
 
+  public getMatchDetails(_node: ASTNode, _context: MatchContext) {
+    return {
+      impact: 'Inline functions create a new reference every render and can break memoization of children.',
+      suggestion: 'Wrap the handler with useCallback or move it outside the render path to keep a stable reference.',
+      fix: {
+        type: 'copy' as const,
+        title: 'useCallback handler template',
+        text: '// In the component body\nconst handleClick = React.useCallback((...args) => {\n  // logic here\n}, []);\n\n// In JSX\n<Button onClick={handleClick}>Click</Button>'
+      }
+    } as const;
+  }
+
   private isReactFile(context: MatchContext): boolean {
     return context.language === 'javascriptreact' ||
            context.language === 'typescriptreact' ||

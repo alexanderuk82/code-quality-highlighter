@@ -39,6 +39,27 @@ class MissingDependenciesMatcher {
         }
         return false;
     }
+    getMatchDetails(_node, _context) {
+        try {
+            // Best-effort suggestion: present a fixed template to copy
+            // We don't mutate user code automatically because computing exact deps is context-sensitive.
+            const example = `// Ensure all referenced values are listed in deps or use callbacks/memos
+useEffect(() => {
+  // ...effect code
+}, [/* add missing deps here */]);`;
+            return {
+                suggestion: 'Include all referenced props/state/functions in the dependency array, or stabilize functions with useCallback/useMemo.',
+                fix: {
+                    type: 'copy',
+                    title: 'Add required dependencies',
+                    text: example
+                }
+            };
+        }
+        catch {
+            return { suggestion: undefined, examples: undefined };
+        }
+    }
     isReactFile(context) {
         return context.language === 'javascriptreact' ||
             context.language === 'typescriptreact' ||

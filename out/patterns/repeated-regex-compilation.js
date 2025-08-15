@@ -15,6 +15,18 @@ class RepeatedRegexCompilationMatcher {
         }
         return false;
     }
+    getMatchDetails(_node, _context) {
+        // Provide a conservative, copy-only fix suggestion to hoist regex creation
+        return {
+            impact: 'Avoid recompiling regular expressions in hot paths; hoist or cache them to reduce allocations.',
+            suggestion: 'Create the RegExp once outside the loop and reuse it within the loop body.',
+            fix: {
+                type: 'copy',
+                title: 'Hoist regex outside the loop',
+                text: '// Hoist regex outside the loop\nconst re = /pattern/; // or new RegExp(\'pattern\')\nfor (/* items */) {\n  // reuse compiled regex\n  // count += re.test(s) ? 1 : 0;\n}'
+            }
+        };
+    }
     containsRegexCreation(n) {
         if (!n)
             return false;
