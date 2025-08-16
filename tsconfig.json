@@ -32,6 +32,7 @@
   "exclude": [
     "node_modules",
     "out",
-    "tests"
+    "tests",
+    "**/*.old.ts"
   ]
 }

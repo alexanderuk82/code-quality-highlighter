@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { PatternMatch, Severity, DecorationConfig } from '../types';
+import { personalizedFixGenerator } from '../utils/personalized-fix-generator';
 
 /**
  * Manages text decorations and hover providers for code quality highlighting
@@ -94,10 +95,52 @@ export class DecorationManager {
       console.warn('[Hover] Failed to extract code snippet:', e);
     }
 
-    // Personalized fix (if available)
-    if (match.details?.fix && match.severity !== 'good') {
+    // Generate personalized fix using the universal generator
+    let hasPersonalizedFix = false;
+    try {
+      console.log('[Hover] Attempting personalized fix for:', match.ruleId);
+      console.log('[Hover] Match context available:', !!match.context);
+      console.log('[Hover] Match node available:', !!match.node);
+      console.log('[Hover] Match range:', match.range);
+      
+      const personalizedFix = personalizedFixGenerator.generateFix(match, match.context);
+      console.log('[Hover] Personalized fix result:', personalizedFix ? 'Generated' : 'Failed');
+      
+      if (personalizedFix && match.severity !== 'good') {
+        hasPersonalizedFix = true;
+        markdown.appendMarkdown('### 🛠️ Your Code Fixed\n');
+        
+        if (personalizedFix.type === 'copy' && personalizedFix.text) {
+          markdown.appendCodeblock(personalizedFix.text, 'javascript');
+          const copyArgs = encodeURIComponent(JSON.stringify([personalizedFix.text]));
+          markdown.appendMarkdown(`\n[📋 Copy Your Fixed Code](command:codeQuality.copySolution?${copyArgs})\n\n`);
+        } else if (personalizedFix.type === 'replace' && personalizedFix.newText) {
+          markdown.appendCodeblock(personalizedFix.newText, 'javascript');
+          const target = personalizedFix.range || match.range;
+          const replaceData = {
+            range: {
+              start: { line: target.start.line, character: target.start.character },
+              end: { line: target.end.line, character: target.end.character }
+            },
+            newCode: personalizedFix.newText
+          };
+          const copyArgs = encodeURIComponent(JSON.stringify([personalizedFix.newText]));
+          const replaceArgs = encodeURIComponent(JSON.stringify([JSON.stringify(replaceData)]));
+          markdown.appendMarkdown(`\n[📋 Copy Your Fixed Code](command:codeQuality.copySolution?${copyArgs} "Copy your fixed code")`);
+          markdown.appendMarkdown(` | [🔄 Replace Code](command:codeQuality.replaceCode?${replaceArgs} "Apply fix to your code")\n\n`);
+        }
+      } else {
+        console.log('[Hover] No personalized fix generated or severity is good');
+      }
+    } catch (e) {
+      console.error('[Hover] Personalized fix generation error:', e);
+      console.log('[Hover] Error stack:', (e as Error).stack);
+    }
+
+    // Original fix from match details (if personalized fix failed)
+    if (!hasPersonalizedFix && match.details?.fix && match.severity !== 'good') {
       const fx = match.details.fix;
-      markdown.appendMarkdown('### 🛠️ Proposed fix (personalized)\n');
+      markdown.appendMarkdown('### 🛠️ Proposed fix\n');
       if (fx.type === 'copy' && fx.text) {
         markdown.appendCodeblock(fx.text, 'javascript');
         const copyArgs = encodeURIComponent(JSON.stringify([fx.text]));
