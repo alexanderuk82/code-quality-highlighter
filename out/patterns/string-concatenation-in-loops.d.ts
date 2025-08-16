@@ -4,11 +4,15 @@ import { PatternRule, PatternMatcher, AnyASTNode, MatchContext } from '../types'
  */
 export declare class StringConcatenationInLoopsMatcher implements PatternMatcher {
     match(node: AnyASTNode, context: MatchContext): boolean;
-    getMatchDetails(node: AnyASTNode, _context: MatchContext): {
+    getMatchDetails(node: AnyASTNode, context: MatchContext): {
         complexity: number;
         impact: string;
         suggestion: string;
+        fix: any;
     };
+    private generatePersonalizedFix;
+    private getVariableName;
+    private getLoopContext;
     private isStringConcatenationAssignment;
     private isStringConcatenationExpression;
     private isLikelyStringOperation;

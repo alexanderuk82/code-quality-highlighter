@@ -6,7 +6,8 @@ import { patternEngine } from './patterns/engine';
 import { nestedLoopRule } from './patterns/nested-loops';
 import { blockingSyncOperationsRule } from './patterns/blocking-sync-operations';
 import { expensiveOperationsInLoopsRule } from './patterns/expensive-operations-in-loops';
-import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
+// import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
+import { enhancedStringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops-enhanced';
 import { domQueriesInLoopsRule } from './patterns/dom-queries-in-loops';
 import { memoryLeaksRule } from './patterns/memory-leaks';
 import { multipleArrayIterationsRule } from './patterns/multiple-array-iterations';
@@ -125,7 +126,9 @@ export class CodeQualityExtension {
     patternEngine.registerRule(nestedLoopRule);
     patternEngine.registerRule(blockingSyncOperationsRule);
     patternEngine.registerRule(expensiveOperationsInLoopsRule);
-    patternEngine.registerRule(stringConcatenationInLoopsRule);
+    // Use enhanced version with personalized fixes
+    patternEngine.registerRule(enhancedStringConcatenationInLoopsRule);
+    // patternEngine.registerRule(stringConcatenationInLoopsRule); // Original version
     patternEngine.registerRule(domQueriesInLoopsRule);
     patternEngine.registerRule(memoryLeaksRule);
     patternEngine.registerRule(multipleArrayIterationsRule);

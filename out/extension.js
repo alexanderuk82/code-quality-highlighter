@@ -44,7 +44,8 @@ const engine_1 = require("./patterns/engine");
 const nested_loops_1 = require("./patterns/nested-loops");
 const blocking_sync_operations_1 = require("./patterns/blocking-sync-operations");
 const expensive_operations_in_loops_1 = require("./patterns/expensive-operations-in-loops");
-const string_concatenation_in_loops_1 = require("./patterns/string-concatenation-in-loops");
+// import { stringConcatenationInLoopsRule } from './patterns/string-concatenation-in-loops';
+const string_concatenation_in_loops_enhanced_1 = require("./patterns/string-concatenation-in-loops-enhanced");
 const dom_queries_in_loops_1 = require("./patterns/dom-queries-in-loops");
 const memory_leaks_1 = require("./patterns/memory-leaks");
 const multiple_array_iterations_1 = require("./patterns/multiple-array-iterations");
@@ -170,7 +171,9 @@ class CodeQualityExtension {
         engine_1.patternEngine.registerRule(nested_loops_1.nestedLoopRule);
         engine_1.patternEngine.registerRule(blocking_sync_operations_1.blockingSyncOperationsRule);
         engine_1.patternEngine.registerRule(expensive_operations_in_loops_1.expensiveOperationsInLoopsRule);
-        engine_1.patternEngine.registerRule(string_concatenation_in_loops_1.stringConcatenationInLoopsRule);
+        // Use enhanced version with personalized fixes
+        engine_1.patternEngine.registerRule(string_concatenation_in_loops_enhanced_1.enhancedStringConcatenationInLoopsRule);
+        // patternEngine.registerRule(stringConcatenationInLoopsRule); // Original version
         engine_1.patternEngine.registerRule(dom_queries_in_loops_1.domQueriesInLoopsRule);
         engine_1.patternEngine.registerRule(memory_leaks_1.memoryLeaksRule);
         engine_1.patternEngine.registerRule(multiple_array_iterations_1.multipleArrayIterationsRule);

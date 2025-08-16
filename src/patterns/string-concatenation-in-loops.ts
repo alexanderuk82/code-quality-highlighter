@@ -25,15 +25,106 @@ export class StringConcatenationInLoopsMatcher implements PatternMatcher {
     return false;
   }
 
-  public getMatchDetails(node: AnyASTNode, _context: MatchContext) {
+  public getMatchDetails(node: AnyASTNode, context: MatchContext) {
     const concatenationType = this.getConcatenationType(node);
+    
+    // Extract variable names and context for personalized fix
+    const fix = this.generatePersonalizedFix(node, context);
 
     return {
       complexity: 2,
       impact: 'O(n²) string concatenation - each += creates new string object, copying all previous content',
-      suggestion: `Use array.join() or template literals for O(n) performance instead of ${concatenationType}`
+      suggestion: `Use array.join() or template literals for O(n) performance instead of ${concatenationType}`,
+      fix: fix
     };
   }
+
+  private generatePersonalizedFix(node: AnyASTNode, context: MatchContext): any {
+    try {
+      // Get the variable being concatenated to
+      if (node.type === 'AssignmentExpression' && (node as any).operator === '+=') {
+        const variableName = this.getVariableName((node as any).left);
+        const loopInfo = this.getLoopContext(node, context);
+        
+        if (variableName && loopInfo) {
+          // Generate personalized solution based on actual code
+          const arrayName = `${variableName}Parts`;
+          const loopVar = loopInfo.iteratorVar || 'item';
+          const loopArray = loopInfo.arrayName || 'items';
+          
+          // Build personalized fix
+          let fixCode = `// Initialize array before loop\n`;
+          fixCode += `const ${arrayName} = [];\n`;
+          fixCode += `// Inside your loop, push instead of concatenating\n`;
+          fixCode += `for (let ${loopVar} of ${loopArray}) {\n`;
+          fixCode += `  ${arrayName}.push(/* your content here */);\n`;
+          fixCode += `}\n`;
+          fixCode += `// After loop, join the array\n`;
+          fixCode += `const ${variableName} = ${arrayName}.join('');`;
+          
+          return {
+            type: 'copy',
+            text: fixCode
+          };
+        }
+      }
+    } catch (e) {
+      // Fall back to generic fix if extraction fails
+      console.log('Failed to generate personalized fix:', e);
+    }
+    
+    // Default generic fix
+    return {
+      type: 'copy',
+      text: `const parts = [];\nfor (let item of items) {\n  parts.push(/* your content */);\n}\nconst result = parts.join('');`
+    };
+  }
+
+  private getVariableName(node: AnyASTNode): string | null {
+    if (node.type === 'Identifier') {
+      return (node as any).name;
+    }
+    return null;
+  }
+
+  private getLoopContext(node: AnyASTNode, context: MatchContext): any {
+    // This would need to traverse up the AST to find the loop
+    // For now, return a simplified version
+    const sourceCode = context.sourceCode;
+    const nodeStart = node.start || 0;
+    const codeBeforeNode = sourceCode.substring(Math.max(0, nodeStart - 200), nodeStart);
+    
+    // Try to extract loop variable names with regex (simplified)
+    const forOfMatch = codeBeforeNode.match(/for\s*\(\s*(?:let|const|var)\s+(\w+)\s+of\s+(\w+)/i);
+    if (forOfMatch) {
+      return {
+        iteratorVar: forOfMatch[1],
+        arrayName: forOfMatch[2]
+      };
+    }
+    
+    const forInMatch = codeBeforeNode.match(/for\s*\(\s*(?:let|const|var)\s+(\w+)\s+in\s+(\w+)/i);
+    if (forInMatch) {
+      return {
+        iteratorVar: forInMatch[1],
+        arrayName: forInMatch[2]
+      };
+    }
+    
+    return null;
+  }
+
+  // Commented out - not used currently but kept for future enhancements
+  // private extractConcatenatedContent(node: AnyASTNode, context: MatchContext): string {
+  //   // Extract the actual content being concatenated
+  //   const nodeWithRight = node as any;
+  //   if (nodeWithRight.right) {
+  //     const start = nodeWithRight.right.start || 0;
+  //     const end = nodeWithRight.right.end || start + 10;
+  //     return context.sourceCode.substring(start, end);
+  //   }
+  //   return '';
+  // }
 
   private isStringConcatenationAssignment(node: AnyASTNode): boolean {
     if (node.type !== 'AssignmentExpression') return false;
